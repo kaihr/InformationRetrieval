@@ -388,4 +388,6 @@ FodyWeavers.xsd
 *.sln.iml
 
 new train/
+new test/
 compressed/
+SearchEngine/
