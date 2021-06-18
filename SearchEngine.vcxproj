@@ -139,11 +139,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="LinkedList.h" />
+    <ClInclude Include="SimpleSearchEngine.h" />
     <ClInclude Include="StopWords.h" />
     <ClInclude Include="TextNormalizer.h" />
     <ClInclude Include="TextProcessing.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="LinkedList.cpp" />
+    <ClCompile Include="SimpleSearchEngine.cpp" />
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="StopWords.cpp" />
     <ClCompile Include="TextNormalizer.cpp" />
