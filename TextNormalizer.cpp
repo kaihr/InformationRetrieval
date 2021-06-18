@@ -1,4 +1,5 @@
 #include "TextNormalizer.h"
+#include "stdio.h"
 
 bool isIn(wchar_t ch, int set[], int nElem) {
 	for (int i = 0; i < nElem; i++)
@@ -18,8 +19,10 @@ wchar_t wideCharNormalize(wchar_t ch)
 	int u[] = { 117, 249, 250, 7911, 361, 7909, 432, 7915, 7913, 7917, 7919, 7921, 217, 218, 7910, 360, 7908, 431, 7914, 7912, 7916, 7918, 7920 };
 	int y[] = { 121, 7923, 253, 7927, 7929, 7925, 7922, 221, 7926, 7928, 7924 };
 
-	if (0 <= ch && ch < 128)
+	if ('a' <= ch && ch <= 'z')
 		return ch;
+	if ('A' <= ch && ch <= 'Z')
+		return ch - 'A' + 'a';
 	if (isIn(ch, a, 35))
 		return L'a';
 	if (isIn(ch, d, 3))
@@ -36,4 +39,68 @@ wchar_t wideCharNormalize(wchar_t ch)
 		return L'y';
 
 	return ch;
+}
+
+bool textNormalize(const wchar_t* inputPath, const wchar_t* outputPath)
+{
+	FILE* fin = _wfopen(inputPath, L"r,ccs=UTF-8");
+	FILE* fout = _wfopen(outputPath, L"wb+,ccs=UTF-8");
+
+	if (!fin)
+		return false;
+
+	if (!fout)
+		return false;
+
+	wchar_t last = L' ';
+	while (true) {
+		wchar_t ch = fgetwc(fin);
+
+		if (feof(fin))
+			break;
+
+		ch = wideCharNormalize(ch);
+
+		if (ch == ' ' || ch == '\n') {
+			if (ch == last)
+				continue;
+		}
+
+		last = ch;
+		fwprintf(fout, L"%lc", ch);
+	}
+
+	fclose(fin);
+	fclose(fout);
+
+	return true;
+}
+
+bool readWithOutGiveAShit(const wchar_t* inputPath)
+{
+	FILE* fin = _wfopen(inputPath, L"r,ccs=UTF-8");
+
+	if (!fin)
+		return false;
+
+	wchar_t last = L' ';
+	while (true) {
+		wchar_t ch = fgetwc(fin);
+
+		if (feof(fin))
+			break;
+
+		ch = wideCharNormalize(ch);
+
+		if (ch == ' ' || ch == '\n') {
+			if (ch == last)
+				continue;
+		}
+
+		last = ch;
+	}
+
+	fclose(fin);
+
+	return true;
 }
