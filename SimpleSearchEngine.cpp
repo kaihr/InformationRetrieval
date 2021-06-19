@@ -5,7 +5,7 @@
 #include "windows.h"
 #include <stdio.h>
 
-const int BUCKET_SIZE = (int)1e7 + 3;
+const int BUCKET_SIZE = (int)1e6;
 FILE* pathFile;
 int nFilesRead = 0;
 
@@ -168,7 +168,7 @@ bool loadInvTable(const wchar_t* outputPath)
 	}
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
-		if (i % (int)1e6 == 0) {
+		if (i % (int)(BUCKET_SIZE / 10) == 0) {
 			fprintf(stderr, "Loading...\n");
 		}
 		int size = 0;
