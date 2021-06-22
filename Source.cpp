@@ -1,8 +1,4 @@
-#include "SimpleSearchEngine.h"
-
-int main() {
-	buildHashTable(L"new train");
-	//query();
+﻿int main() {
 
 	return 0;
 }

@@ -113,9 +113,6 @@ bool listDirectoryContent(const wchar_t* sDir)
 
 void buildHashTable(const wchar_t* path)
 {
-	int x;
-	x = 5;
-
 	if (!init()) {
 		fwprintf(stderr, L"Not enough memory\n");
 		return;
@@ -183,38 +180,4 @@ bool loadInvTable(const wchar_t* outputPath)
 	fclose(fin);
 
 	return true;
-}
-
-void query()
-{
-	loadInvTable(L"inverted_index.txt");
-	
-	while (true) {
-		int option;
-		printf("option = ");
-		scanf("%d", &option);
-		if (option == 0)
-			break;
-
-		wchar_t buffer[100];
-
-		printf("Keyword: ");
-		fgetws(buffer, 100, stdin);
-		fgetws(buffer, 100, stdin);
-
-		buffer[wcslen(buffer) - 1] = L'\0';
-
-		fwprintf(stderr, L"%ls\n", buffer);
-
-		int foo = wchHash(buffer);
-
-		int cnt = 0;
-		for (Node* iter = hashTable[foo]->pHead; iter && (cnt < 5); iter = iter->nxt, cnt++)
-			fprintf(stderr, "%d\n", iter->value);
-
-		fprintf(stderr, "Found %d results\n", cnt);
-	}
-
-	for (int i = 0; i < BUCKET_SIZE; i++)
-		eraseLinkedList(hashTable[i]);
 }

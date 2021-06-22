@@ -14,5 +14,3 @@ void buildHashTable(const wchar_t *path);
 bool saveInvTable(const wchar_t *outputPath);
 
 bool loadInvTable(const wchar_t* outputPath);
-
-void query();

@@ -63,51 +63,70 @@ wchar_t* readFile(const wchar_t* inputPath)
 	return wstr;
 }
 
-void wordToken(const wchar_t* _text)
+wchar_t** wordToken(const wchar_t* _text, int &nWords)
 {
 	int length = wcslen(_text);
 	wchar_t* text = new wchar_t[length + 1];
+	wchar_t* currentWord;
+	wchar_t* pt = nullptr;
+	wchar_t delim[] = L" ";
 	wcscpy(text, _text);
 
-	wchar_t* currentWord;
-	wchar_t* pt;
-
-	wchar_t delim[] = L" ";
-
+	nWords = 0;
 	currentWord = wcstok(text, delim, &pt);
-
-	bool first = true;
-
 	while (currentWord != nullptr) {
-		if (!first)
-			wprintf(L" ");
-		first = false;
+		nWords++;
 
-		wprintf(L"%ls", currentWord);
+		currentWord = wcstok(nullptr, delim, &pt);
+	}
+
+	wchar_t** words = new wchar_t* [nWords];
+	wcscpy(text, _text);
+	
+	nWords = 0;
+	currentWord = wcstok(text, delim, &pt);
+	while (currentWord != nullptr) {
+		words[nWords] = new wchar_t[wcslen(currentWord) + 1];
+		wcscpy(words[nWords], currentWord);
+		nWords++;
+
 		currentWord = wcstok(nullptr, delim, &pt);
 	}
 
 	delete[] text;
+	return words;
 }
 
-void sentenceToken(const wchar_t* _text)
+wchar_t** sentenceToken(const wchar_t* _text, int &nSentences)
 {
 	int length = wcslen(_text);
 	wchar_t* text = new wchar_t[length + 1];
+	wchar_t* currentSentence;
+	wchar_t* pt = nullptr;
+	wchar_t delim[] = L".,:;'\"!()\n";
 	wcscpy(text, _text);
 
-	wchar_t* currentSentence;
-	wchar_t* pt;
-
-	wchar_t delim[] = L".,:;'\"!()\n";
-
+	nSentences = 0;
 	currentSentence = wcstok(text, delim, &pt);
 	while (currentSentence != nullptr) {
-		//wprintf(L"%ls\n", currentSentence);
+		nSentences++;
+
 		currentSentence = wcstok(nullptr, delim, &pt);
-		wordToken(currentSentence);
-		wprintf(L"\n");
+	}
+
+	wchar_t** sentences = new wchar_t* [nSentences];
+	wcscpy(text, _text);
+	
+	nSentences = 0;
+	currentSentence = wcstok(text, delim, &pt);
+	while (currentSentence != nullptr) {
+		sentences[nSentences] = new wchar_t[wcslen(currentSentence) + 1];
+		wcscpy(sentences[nSentences], currentSentence);
+		nSentences++;
+
+		currentSentence = wcstok(nullptr, delim, &pt);
 	}
 
 	delete[] text;
+	return sentences;
 }
