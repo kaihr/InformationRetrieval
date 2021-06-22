@@ -15,3 +15,7 @@ bool saveInvTable(const wchar_t *outputPath);
 int loadInvTable(const wchar_t* inputPath);
 
 void releaseInvTable();
+
+bool wchComp(void* a, void* b);
+
+void find100Best(wchar_t** pathList, int nFiles, const wchar_t* keywords);

@@ -1,13 +1,16 @@
 #include "SimpleSearchEngine.h"
 #include "TextProcessing.h"
+#include "TextNormalizer.h"
 #include "LinkedList.h"
 #include "Sort.h"
 #include "Updater.h"
+#include "Pair.h"
 
 #include <stdio.h>
 #include <wchar.h>
 #include <Windows.h>
 #include <time.h>
+#include <assert.h>
 
 const int BUCKET_SIZE = (int)1e6;
 
@@ -113,6 +116,70 @@ bool wchComp(void* a, void* b) {
 		return true;
 
 	return false;
+}
+
+void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords)
+{
+	Pair *score = new Pair[nFiles];
+
+	for (int i = 0; i < nFiles; i++) {
+		score[i].a = 0;
+		score[i].b = i;
+	}
+
+	int nTok = 0;
+
+	wchar_t modifiedKeyWords[256];
+	wcscpy(modifiedKeyWords, originalKeywords);
+
+	toLatinLetter(modifiedKeyWords);
+	wchar_t** token = splitToken(modifiedKeyWords, nTok, L" .,:;'\"!()\n");
+
+	wchar_t currentWord[512];
+
+	for (int i = 0; i < nTok; i++) {
+		wcscpy(currentWord, L"");
+		for (int j = i; j < nTok && j < i + 6; j++) {
+			if (j != i)
+				wcscat(currentWord, L" ");
+			wcscat(currentWord, token[j]);
+
+			//wprintf(L"%ls\n", currentWord);
+			int index = wchHash(currentWord);
+			for (Node* iter = hashTable[index]->pHead; iter; iter = iter->nxt) {
+				score[iter->value].a += (1 << (j - i + 1));
+			}
+		}
+	}
+
+	mergeSort((void*)score, nFiles, sizeof(Pair), pairCmp);
+
+	wprintf(L"Search results for: %ls", originalKeywords);
+
+	for (int i = 0; i < 100; i++) {
+		int currentScore = score[i].a;
+
+		if (currentScore == 0)
+			break;
+
+		int currentFileId = score[i].b;
+
+		wprintf(L"- %ls, rating: %d\n", pathList[currentFileId * 2], currentScore);
+
+		if ((i + 1) % 10 == 0) {
+			wprintf(L"Continue searching ? (Enter 1 to continue, other keys to stop): ");
+			int option;
+			wscanf(L"%d", &option);
+			if (option != 1)
+				break;
+		}
+	}
+
+	getchar();
+	wprintf(L"Press any button to continue\n");
+	getchar();
+
+	delete[] score;
 }
 
 void buildHashTable(const wchar_t* path)

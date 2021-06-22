@@ -1,6 +1,7 @@
 #include "Updater.h"
 #include "TextProcessing.h"
 #include "SimpleSearchEngine.h"
+#include "TextNormalizer.h"
 
 #include <stdio.h>
 #include <wchar.h>
@@ -33,22 +34,25 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 	if (!fin)
 		return false;
 
-	FILE* fout = _wfopen(metaDataPath, L"a,ccs=UTF-8");
+	FILE* fout = _wfopen(metaDataPath, L"w,ccs=UTF-8");
 
 	wchar_t *text = readFile(inputPath);
+	toLowerCase(text);
+
 	int nSentences = 0;
 	wchar_t **sentences = sentenceToken(text, nSentences);
 
 	int wordsAdded = 0;
+	wchar_t currentWord[512] = L"";
+	wchar_t tmp[512] = L"";
 	for (int i = 0; i < nSentences; i++) {
 		int nWords = 0;
 		wchar_t** words = wordToken(sentences[i], nWords);
-
 		for (int j = 0; j < nWords; j++) {
 			int nextJ = -1;
 			//nextJ != -1 --> nextJ is the largest number such that [j, nextJ) is a stop word
 
-			wchar_t currentWord[512] = L"";
+			wcscpy(currentWord, L"");
 			for (int k = j; k < nWords && k < j + 6; k++) {
 				if (j != k)
 					wcscat(currentWord, L" ");
@@ -60,11 +64,16 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 
 			if (nextJ == -1) {
 				wcscpy(currentWord, L"");
+				wcscpy(tmp, L"");
 				for (int k = j; k < nWords && k < j + 6; k++) {
 					if (j != k)
 						wcscat(currentWord, L" ");
-					wcscat(currentWord, words[k]);
 
+					wcscpy(tmp, words[k]);
+					toLatinLetter(tmp);
+					wcscat(currentWord, tmp);
+
+					//wprintf(L"%ls\n", currentWord);
 					hashTableInsert(currentWord, docID);
 					wordsAdded++;
 				}
@@ -73,7 +82,9 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 				j = nextJ;
 		}
 		
+
 		for (int j = 0; j < nWords; j++) {
+			toLatinLetter(words[j]);
 			fwprintf(fout, L"%ls%lc", words[j], L" \n"[j == nWords - 1]);
 		}
 

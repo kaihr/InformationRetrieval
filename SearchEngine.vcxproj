@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="LinkedList.h" />
+    <ClInclude Include="Pair.h" />
     <ClInclude Include="SearchQuery.h" />
     <ClInclude Include="SimpleSearchEngine.h" />
     <ClInclude Include="Sort.h" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LinkedList.cpp" />
+    <ClCompile Include="Pair.cpp" />
     <ClCompile Include="SearchQuery.cpp" />
     <ClCompile Include="SimpleSearchEngine.cpp" />
     <ClCompile Include="Sort.cpp" />
