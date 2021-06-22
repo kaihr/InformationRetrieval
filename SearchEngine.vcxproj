@@ -145,6 +145,7 @@
     <ClInclude Include="Sort.h" />
     <ClInclude Include="TextNormalizer.h" />
     <ClInclude Include="TextProcessing.h" />
+    <ClInclude Include="Updater.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LinkedList.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="TextNormalizer.cpp" />
     <ClCompile Include="TextProcessing.cpp" />
+    <ClCompile Include="Updater.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -37,6 +37,9 @@ wchar_t wideCharNormalize(wchar_t ch)
 		return L'u';
 	if (isIn(ch, y, 11))
 		return L'y';
-	
+
+	if (ch >= 128)
+		return ' ';
+
 	return ch;
 }

@@ -1,23 +1,22 @@
 #include "SimpleSearchEngine.h"
 #include "TextProcessing.h"
 #include "LinkedList.h"
-#include "wchar.h"
-#include "windows.h"
+#include "Sort.h"
+#include "Updater.h"
+
 #include <stdio.h>
+#include <wchar.h>
+#include <Windows.h>
+#include <time.h>
 
 const int BUCKET_SIZE = (int)1e6;
-FILE* pathFile;
-int nFilesRead = 0;
 
+int nFilesRead = 0;
 LinkedList *hashTable[BUCKET_SIZE];
 
 bool init()
 {
 	nFilesRead = 0;
-	pathFile = _wfopen(L"path.txt", L"w,ccs=UTF-8");
-
-	if (!pathFile)
-		return false;
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
 		hashTable[i] = linkedListInit();
@@ -42,25 +41,6 @@ int wchHash(const wchar_t* wstr)
 	return ans;
 }
 
-void retardSplit(int docId, const wchar_t* inputPath)
-{
-	wchar_t* text = readFile(inputPath);
-	
-	wchar_t* currentWord;
-	wchar_t* pt;
-
-	wchar_t delim[] = L".,:;'\"!()\n ";
-
-	currentWord = wcstok(text, delim, &pt);
-
-	while (currentWord != nullptr) {
-		hashTableInsert(currentWord, docId);
-		currentWord = wcstok(nullptr, delim, &pt);
-	}
-
-	delete[] text;
-}
-
 void hashTableInsert(const wchar_t* ch, int docId)
 {
 	int toBucket = wchHash(ch);
@@ -76,54 +56,98 @@ void hashTableInsert(const wchar_t* ch, int docId)
 		insertBack(hashTable[toBucket], docId);
 }
 
-bool listDirectoryContent(const wchar_t* sDir)
+bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords)
 {
     WIN32_FIND_DATA fdFile;
-    HANDLE hFind = NULL;
+    HANDLE hFind = nullptr;
 
-    wchar_t sPath[2048];
+    wchar_t sPath[2048] = L"";
 
-    wsprintf(sPath, L"%s\\*.*", sDir);
+	wcscat(sPath, sDir);
+    wcscat(sPath, L"\\*.*");
 
-    if ((hFind = FindFirstFile(sPath, &fdFile)) == INVALID_HANDLE_VALUE)
-        return false;
+	hFind = FindFirstFile(sPath, &fdFile);
+
+	if (hFind == INVALID_HANDLE_VALUE)
+		return false;
 
     do
     {
-        if (wcscmp(fdFile.cFileName, L".") != 0 && wcscmp(fdFile.cFileName, L"..") != 0)
-        {
-            swprintf(sPath, L"%s\\%s", sDir, fdFile.cFileName);
-            if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            {
-                wprintf(L"Directory: %s\n", sPath);
-                listDirectoryContent(sPath);
-            }
-            else {
-				fwprintf(pathFile, L"%ls\n", sPath);
-				retardSplit(nFilesRead, sPath);
-				nFilesRead++;
-            }
-        }
-    } while (FindNextFile(hFind, &fdFile));
+		if (wcscmp(fdFile.cFileName, L".") == 0 || wcscmp(fdFile.cFileName, L"..") == 0)
+			continue;
 
-    FindClose(hFind);
-    return true;
+		wcscpy(sPath, sDir);
+		wcscat(sPath, L"\\");
+		wcscat(sPath, fdFile.cFileName);
+
+		if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			wprintf(L"Directory: %ls\n", sPath);
+			listDirectoryContent(sPath, stopWords, nStopWords);
+		}
+		else {
+			wchar_t metaDataPath[2048] = L"";
+			wcscpy(metaDataPath, L"compressed\\");
+			wchar_t outputName[20];
+
+			for (int i = 0; i < 10; i++)
+				outputName[i] = (wchar_t)((rand() % 26) + 'a');
+			outputName[10] = L'\0';
+
+			wcscat(metaDataPath, outputName);
+			wcscat(metaDataPath, L".txt");
+
+			editFile(nFilesRead, L"path.txt", sPath, metaDataPath, stopWords, nStopWords);
+			nFilesRead++;
+		}
+	} while (FindNextFile(hFind, &fdFile));
+	
+	FindClose(hFind);
+	return true;
 }
 
+bool wchComp(void* a, void* b) {
+	wchar_t* lhs = *((wchar_t**)a);
+	wchar_t* rhs = *((wchar_t**)b);
+
+	if (wcscmp(lhs, rhs) < 0)
+		return true;
+
+	return false;
+}
 
 void buildHashTable(const wchar_t* path)
 {
+	time_t beginTime = clock();
 	if (!init()) {
 		fwprintf(stderr, L"Not enough memory\n");
 		return;
 	}
 
-	listDirectoryContent(path);
+	FILE* dummy = _wfopen(L"path.txt", L"w,ccs=UTF-8");
+	fclose(dummy);
+
+	int nWords = 0;
+	wchar_t* text = readFile(L"resources\\vietnamese_stopwords.txt");
+	wchar_t** stopWords = sentenceToken(text, nWords);
+
+	if (!stopWords) {
+		fwprintf(stderr, L"Can not load stopwords.\n");
+		return;
+	}
+
+	mergeSort((void*)stopWords, nWords, sizeof(wchar_t*), wchComp);
+
+	listDirectoryContent(path, stopWords, nWords);
 
 	if (!saveInvTable(L"inverted_index.txt"))
 		fwprintf(stderr, L"Can not save inverted index table\n");
 
-	fclose(pathFile);
+	for (int i = 0; i < nWords; i++)
+		delete[] stopWords[i];
+	delete[] stopWords;
+	delete[] text;
+
+	fprintf(stderr, "Elapsed time: %.5lf seconds", (clock() - beginTime) * 1.0 / CLOCKS_PER_SEC);
 }
 
 bool saveInvTable(const wchar_t* outputPath)
@@ -151,18 +175,20 @@ bool saveInvTable(const wchar_t* outputPath)
 	return true;
 }
 
-bool loadInvTable(const wchar_t* outputPath)
+int loadInvTable(const wchar_t* inputPath)
 {
-	FILE* fin = _wfopen(outputPath, L"r,ccs=UTF-8");
+	FILE* fin = _wfopen(inputPath, L"r,ccs=UTF-8");
 
 	if (!fin)
-		return false;
+		return -1;
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
 		hashTable[i] = linkedListInit();
 		if (!hashTable[i])
-			return false;
+			return -1;
 	}
+
+	nFilesRead = 0;
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
 		if (i % (int)(BUCKET_SIZE / 10) == 0) {
@@ -173,11 +199,24 @@ bool loadInvTable(const wchar_t* outputPath)
 		while (size-- > 0) {
 			int x = 0;
 			fwscanf(fin, L"%d", &x);
+
+			if (x + 1 > nFilesRead)
+				nFilesRead = x + 1;
+
 			insertBack(hashTable[i], x);
 		}
 	}
 
 	fclose(fin);
 
-	return true;
+	return nFilesRead;
+}
+
+void releaseInvTable()
+{
+	for (int i = 0; i < BUCKET_SIZE; i++) {
+		if (i % ((int)BUCKET_SIZE / 10) == 0)
+			fprintf(stderr, "Unloading...\n");
+		eraseLinkedList(hashTable[i]);
+	}
 }
