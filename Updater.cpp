@@ -28,7 +28,7 @@ bool isStopWord(const wchar_t* word, wchar_t** stopWordsDic, int nStopWords)
 	return false;
 }
 
-bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, const wchar_t* metaDataPath, wchar_t** stopWordsDic, const int nStopWords)
+bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, const wchar_t* metaDataPath, wchar_t** stopWordsDic, const int nStopWords, editF updateFunc)
 {
 	FILE* fin = _wfopen(inputPath, L"r,ccs=UTF-8");
 	if (!fin)
@@ -74,7 +74,7 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 					wcscat(currentWord, tmp);
 
 					//wprintf(L"%ls\n", currentWord);
-					hashTableInsert(currentWord, docID);
+					updateFunc(currentWord, docID);
 					wordsAdded++;
 				}
 			}

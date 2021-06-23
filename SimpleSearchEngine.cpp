@@ -59,6 +59,12 @@ void hashTableInsert(const wchar_t* ch, int docId)
 		insertBack(hashTable[toBucket], docId);
 }
 
+void hashTableRemove(const wchar_t* ch, int docId)
+{
+	int toBucket = wchHash(ch);
+	eraseValue(hashTable[toBucket], docId);
+}
+
 bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords)
 {
     WIN32_FIND_DATA fdFile;
@@ -99,7 +105,7 @@ bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWor
 			wcscat(metaDataPath, outputName);
 			wcscat(metaDataPath, L".txt");
 
-			editFile(nFilesRead, L"path.txt", sPath, metaDataPath, stopWords, nStopWords);
+			editFile(nFilesRead, L"path.txt", sPath, metaDataPath, stopWords, nStopWords, hashTableInsert);
 			nFilesRead++;
 		}
 	} while (FindNextFile(hFind, &fdFile));
@@ -182,6 +188,68 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 	delete[] score;
 }
 
+bool addFile(int& nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar_t**& pathList, wchar_t **stopWords, int nStopWords)
+{
+	wchar_t metaDataPath[2048] = L"";
+	wcscpy(metaDataPath, L"compressed\\");
+	wchar_t outputName[20];
+
+	for (int i = 0; i < 10; i++)
+		outputName[i] = (wchar_t)((rand() % 26) + 'a');
+	outputName[10] = L'\0';
+
+	wcscat(metaDataPath, outputName);
+	wcscat(metaDataPath, L".txt");
+
+	if (!editFile(nFiles, pathPath, filePath, metaDataPath, stopWords, nStopWords, hashTableInsert))
+		return false;
+
+	for (int i = 0; i < nFiles; i++)
+		delete[] pathList[i];
+	delete[] pathList;
+
+	nFiles++;
+
+	wchar_t pathDelim[] = L"\xfeff\n";
+	int nFilesRead = 0;
+	wchar_t* paths = readFile(L"path.txt");
+	pathList = splitToken(paths, nFilesRead, pathDelim);
+
+	assert(nFilesRead / 2 == nFiles);
+
+	saveInvTable(L"inverted_index.txt");
+
+	return true;
+}
+
+bool remFile(int nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar_t** pathList, wchar_t** stopWords, int nStopWord)
+{
+	int docId = -1;
+	for (int i = 0; i < nFiles; i++) {
+		if (wcscmp(filePath, pathList[2 * i]) == 0) {
+			docId = i;
+			break;
+		}
+	}
+
+	if (docId == -1)
+		return false;
+
+	editFile(docId, pathPath, pathList[2 * docId + 1], L"eHtIcSjTqOnRmYtgs", stopWords, nStopWord, hashTableRemove);
+
+	wcscpy(pathList[2 * docId], L"etcjqnmtgs");
+	wcscpy(pathList[2 * docId + 1], L"etcjqnmtgs");
+
+	FILE* fout = _wfopen(pathPath, L"w,ccs=UTF-8");
+	for (int i = 0; i < nFiles; i++)
+		fwprintf(fout, L"%ls\n%ls\n", pathList[2 * i], pathList[2 * i + 1]);
+	fclose(fout);
+
+	saveInvTable(L"inverted_index.txt");
+
+	return true;
+}
+
 void buildHashTable(const wchar_t* path)
 {
 	time_t beginTime = clock();
@@ -213,6 +281,7 @@ void buildHashTable(const wchar_t* path)
 		delete[] stopWords[i];
 	delete[] stopWords;
 	delete[] text;
+	releaseInvTable();
 
 	fprintf(stderr, "Elapsed time: %.5lf seconds", (clock() - beginTime) * 1.0 / CLOCKS_PER_SEC);
 }
@@ -235,8 +304,6 @@ bool saveInvTable(const wchar_t* outputPath)
 			fwprintf(fout, L"%d ", iter->value);
 
 		fwprintf(fout, L"\n");
-
-		eraseLinkedList(hashTable[i]);
 	}
 
 	return true;
