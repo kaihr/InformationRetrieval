@@ -6,12 +6,12 @@ int readInt(FILE* fin)
 	int ans = 0;
 
 	char c;
-	for (c = getwc(fin); (c < '0' || c > '9'); c = getwc(fin))
+	for (c = getwc(fin); (c < '0' || c > '9') && !feof(fin); c = getwc(fin))
 		if (c == '-')
 			isNeg = true;
 
 	ans = (c - '0');
-	for (c = getwc(fin); ('0' <= c && c <= '9'); c = getwc(fin))
+	for (c = getwc(fin); ('0' <= c && c <= '9') && !feof(fin); c = getwc(fin))
 		ans = ans * 10 + (c - '0');
 
 	if (isNeg)

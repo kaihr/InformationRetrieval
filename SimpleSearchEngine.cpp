@@ -6,14 +6,14 @@
 #include "Updater.h"
 #include "Pair.h"
 #include "FastInputOutput.h"
+#include "Constant.h"
+#include "Lazy.h"
 
 #include <stdio.h>
 #include <wchar.h>
 #include <Windows.h>
 #include <time.h>
 #include <assert.h>
-
-const int BUCKET_SIZE = (int)1000000;
 
 int nFilesRead = 0;
 LinkedList *hashTable[BUCKET_SIZE];
@@ -34,8 +34,6 @@ int isFirstRun()
 
 bool init()
 {
-	nFilesRead = 0;
-
 	for (int i = 0; i < BUCKET_SIZE; i++) {
 		hashTable[i] = linkedListInit();
 
@@ -63,12 +61,20 @@ void hashTableInsert(const wchar_t* ch, int docId)
 {
 	int toBucket = wchHash(ch);
 	bool found = false;
-	for (Node* iter = hashTable[toBucket]->pHead; iter; iter = iter->nxt) {
+
+	//wait...
+	//how about you just check the last element because the docID are insert in ascending order anyway
+
+	loadListFromLine(hashTable[toBucket], L"inverted_index.txt", toBucket);
+	if (!isEmpty(hashTable[toBucket]) && (hashTable[toBucket]->pTail->value == docId))
+		found = true;
+
+	/*for (Node* iter = hashTable[toBucket]->pHead; iter; iter = iter->nxt) {
 		if (iter->value == docId) {
 			found = true;
 			break;
 		}
-	}
+	}*/
 
 	if (!found)
 		insertBack(hashTable[toBucket], docId);
@@ -77,6 +83,7 @@ void hashTableInsert(const wchar_t* ch, int docId)
 void hashTableRemove(const wchar_t* ch, int docId)
 {
 	int toBucket = wchHash(ch);
+	loadListFromLine(hashTable[toBucket], L"inverted_index.txt", toBucket);
 	eraseValue(hashTable[toBucket], docId);
 }
 
@@ -167,6 +174,7 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 			//wprintf(L"%ls\n", currentWord);
 			int index = wchHash(currentWord);
+			loadListFromLine(hashTable[index], L"inverted_index.txt", index);
 			for (Node* iter = hashTable[index]->pHead; iter; iter = iter->nxt) {
 				score[iter->value].a += (1 << (j - i + 1));
 			}
@@ -230,9 +238,9 @@ bool addFile(int& nFiles, const wchar_t* filePath, const wchar_t* pathPath, wcha
 	wchar_t* paths = readFile(L"path.txt");
 	pathList = splitToken(paths, nFilesRead, pathDelim);
 
-	assert(nFilesRead / 2 == nFiles);
+	delete[] paths;
 
-	saveInvTable(L"inverted_index.txt");
+	assert(nFilesRead / 2 == nFiles);
 
 	return true;
 }
@@ -260,13 +268,12 @@ bool remFile(int nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar
 		fwprintf(fout, L"%ls\n%ls\n", pathList[2 * i], pathList[2 * i + 1]);
 	fclose(fout);
 
-	saveInvTable(L"inverted_index.txt");
-
 	return true;
 }
 
 void buildHashTable(const wchar_t* path)
 {
+	loadAll();
 	time_t beginTime = clock();
 	if (!init()) {
 		fwprintf(stderr, L"Not enough memory\n");
@@ -279,6 +286,7 @@ void buildHashTable(const wchar_t* path)
 	int nWords = 0;
 	wchar_t* text = readFile(L"resources\\vietnamese_stopwords.txt");
 	wchar_t** stopWords = sentenceToken(text, nWords);
+	delete[] text;
 
 	if (!stopWords) {
 		fwprintf(stderr, L"Can not load stopwords.\n");
@@ -295,7 +303,6 @@ void buildHashTable(const wchar_t* path)
 	for (int i = 0; i < nWords; i++)
 		delete[] stopWords[i];
 	delete[] stopWords;
-	delete[] text;
 	releaseInvTable();
 
 	FILE* config = _wfopen(L"config.txt", L"w,ccs=UTF-8");
@@ -307,6 +314,8 @@ void buildHashTable(const wchar_t* path)
 
 bool saveInvTable(const wchar_t* outputPath)
 {
+	loadInvTable(L"inverted_index.txt");
+
 	FILE* fout = _wfopen(outputPath, L"w,ccs=UTF-8");
 
 	if (!fout)
@@ -314,16 +323,22 @@ bool saveInvTable(const wchar_t* outputPath)
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
 		int len = 0;
+
 		for (Node* iter = hashTable[i]->pHead; iter; iter = iter->nxt)
 			len++;
 
-		fwprintf(fout, L"%d ", len);
+		writeInt(fout, len);
+		fputwc(L' ', fout);
 
-		for (Node* iter = hashTable[i]->pHead; iter; iter = iter->nxt)
-			fwprintf(fout, L"%d ", iter->value);
+		for (Node* iter = hashTable[i]->pHead; iter; iter = iter->nxt) {
+			writeInt(fout, iter->value);
+			fputwc(L' ', fout);
+		}
 
-		fwprintf(fout, L"\n");
+		fputwc(L'\n', fout);
 	}
+
+	fclose(fout);
 
 	return true;
 }
@@ -336,10 +351,7 @@ bool loadInvTable(const wchar_t* inputPath)
 		return false;
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
-		if (i % (int)(BUCKET_SIZE / 10) == 0) {
-			fprintf(stderr, "Loading...\n");
-		}
-		
+		loadListFromLine(hashTable[i], L"inverted_index.txt", i);		
 		int size = 0;
 		size = readInt(fin);
 		while (size-- > 0) {

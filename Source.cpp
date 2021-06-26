@@ -3,6 +3,8 @@
 #include "TextNormalizer.h"
 #include "Updater.h"
 #include "Sort.h"
+#include "FastInputOutput.h"
+#include "Lazy.h"
 
 #include <fcntl.h>
 #include <io.h>
@@ -11,7 +13,6 @@
 #include <Windows.h>
 #include <time.h>
 
-#include "FastInputOutput.h"
 
 int main() {
 	srand(time(nullptr));
@@ -30,12 +31,13 @@ int main() {
 		return 0;
 	}
 
-	if (!loadInvTable(L"inverted_index.txt")) {
-		wprintf(L"Can not load inverted index\n");
-		wprintf(L"Press any button to continue\n");
-		getchar();
-		return 0;
-	}
+	calcPos(L"inverted_index.txt");
+	//if (!loadInvTable(L"inverted_index.txt")) {
+	//	wprintf(L"Can not load inverted index\n");
+	//	wprintf(L"Press any button to continue\n");
+	//	getchar();
+	//	return 0;
+	//}
 
 	wchar_t pathDelim[] = L"\xfeff\n";
 	int nFilesRead = 0;
@@ -134,6 +136,8 @@ int main() {
 		delete[] pathList[i];
 	delete[] pathList;
 
+	wprintf(L"Saving...\n");
+	saveInvTable(L"inverted_index.txt");
 	releaseInvTable();
 
 	return 0;
