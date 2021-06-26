@@ -32,12 +32,6 @@ int main() {
 	}
 
 	calcPos(L"inverted_index.txt");
-	//if (!loadInvTable(L"inverted_index.txt")) {
-	//	wprintf(L"Can not load inverted index\n");
-	//	wprintf(L"Press any button to continue\n");
-	//	getchar();
-	//	return 0;
-	//}
 
 	wchar_t pathDelim[] = L"\xfeff\n";
 	int nFilesRead = 0;

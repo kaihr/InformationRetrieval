@@ -351,14 +351,10 @@ bool loadInvTable(const wchar_t* inputPath)
 		return false;
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
-		loadListFromLine(hashTable[i], L"inverted_index.txt", i);		
-		int size = 0;
-		size = readInt(fin);
-		while (size-- > 0) {
-			int x = 0;
-			x = readInt(fin);
-			insertBack(hashTable[i], x);
-		}
+		if(i % (BUCKET_SIZE / 10) == 0)
+			wprintf(L"Loading...\n");
+
+		loadListFromLine(hashTable[i], L"inverted_index.txt", i);
 	}
 
 	fclose(fin);
