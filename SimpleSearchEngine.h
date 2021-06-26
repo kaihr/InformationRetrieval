@@ -1,5 +1,6 @@
 #pragma once
 
+int isFirstRun();
 bool init();
 
 int wchHash(const wchar_t *wstr);

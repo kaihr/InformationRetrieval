@@ -12,10 +12,24 @@
 #include <time.h>
 #include <assert.h>
 
-const int BUCKET_SIZE = (int)1e6;
+const int BUCKET_SIZE = (int)1000003;
 
 int nFilesRead = 0;
 LinkedList *hashTable[BUCKET_SIZE];
+
+int isFirstRun()
+{
+	FILE* fin = _wfopen(L"config.txt", L"r,ccs=UTF-8");
+
+	if (!fin)
+		return 1;
+
+	int foo;
+	fwscanf(fin, L"%d", &foo);
+
+	fclose(fin);
+	return foo;
+}
 
 bool init()
 {
@@ -48,12 +62,12 @@ void hashTableInsert(const wchar_t* ch, int docId)
 {
 	int toBucket = wchHash(ch);
 	bool found = false;
-	for (Node* iter = hashTable[toBucket]->pHead; iter; iter = iter->nxt) {
-		if (iter->value == docId) {
-			found = true;
-			break;
-		}
-	}
+	//for (Node* iter = hashTable[toBucket]->pHead; iter; iter = iter->nxt) {
+	//	if (iter->value == docId) {
+	//		found = true;
+	//		break;
+	//	}
+	//}
 
 	if (!found)
 		insertBack(hashTable[toBucket], docId);
@@ -282,6 +296,10 @@ void buildHashTable(const wchar_t* path)
 	delete[] stopWords;
 	delete[] text;
 	releaseInvTable();
+
+	FILE* config = _wfopen(L"config.txt", L"w,ccs=UTF-8");
+	fwprintf(config, L"0\n");
+	fclose(config);
 
 	fprintf(stderr, "Elapsed time: %.5lf seconds", (clock() - beginTime) * 1.0 / CLOCKS_PER_SEC);
 }

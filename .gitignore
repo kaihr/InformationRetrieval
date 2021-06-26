@@ -391,3 +391,6 @@ new train/
 new test/
 compressed/
 SearchEngine/
+/dbghelp.dll
+/Microsoft.DTfW.DHL.manifest
+/vld_x86.dll

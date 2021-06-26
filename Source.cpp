@@ -11,12 +11,17 @@
 #include <Windows.h>
 #include <time.h>
 
+//#include <vld.h>
+
 int main() {
 	srand(time(nullptr));
-	//buildHashTable(L"new train");
-	//return 0;
 
-	_setmode(_fileno(stdout), _O_U16TEXT);
+	if (isFirstRun()) {
+		buildHashTable(L"new train");
+		wprintf(L"\nPlease re-start the program.\n");
+		getchar();
+		return 0;
+	}
 
 	if (!init()) {
 		wprintf(L"Can not load inverted index\n");
@@ -30,16 +35,34 @@ int main() {
 	wchar_t pathDelim[] = L"\xfeff\n";
 	int nFilesRead = 0;
 	wchar_t* paths = readFile(L"path.txt");
-	wchar_t** pathList = splitToken(paths, nFilesRead, pathDelim);
 
+	if (!paths) {
+		wprintf(L"Can not load directory list\n");
+		wprintf(L"Press any button to continue\n");
+		getchar();
+		return 0;
+	}
+
+	wchar_t** pathList = splitToken(paths, nFilesRead, pathDelim);
 	int nFiles = nFilesRead / 2;
 
 	int nStopWords = 0;
 	wchar_t* text = readFile(L"resources\\vietnamese_stopwords.txt");
+
+	if (!text) {
+		wprintf(L"Can not load stopwords\n");
+		wprintf(L"Press any button to continue\n");
+		getchar();
+		return 0;
+	}
+
 	wchar_t** stopWords = sentenceToken(text, nStopWords);
 	mergeSort((void*)stopWords, nStopWords, sizeof(wchar_t*), wchComp);
 
-	wchar_t userInput[256];
+	wchar_t userInput[256] = L"";
+
+	delete[] paths;
+	delete[] text;
 
 	while (true) {
 		system("cls");
@@ -104,10 +127,8 @@ int main() {
 	
 	for (int i = 0; i < 2 * nFiles; i++)
 		delete[] pathList[i];
-
 	delete[] pathList;
-	delete[] paths;
-	delete[] text;
+
 	releaseInvTable();
 
 	return 0;
