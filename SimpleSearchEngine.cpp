@@ -5,6 +5,7 @@
 #include "Sort.h"
 #include "Updater.h"
 #include "Pair.h"
+#include "FastInputOutput.h"
 
 #include <stdio.h>
 #include <wchar.h>
@@ -12,7 +13,7 @@
 #include <time.h>
 #include <assert.h>
 
-const int BUCKET_SIZE = (int)1000003;
+const int BUCKET_SIZE = (int)1000000;
 
 int nFilesRead = 0;
 LinkedList *hashTable[BUCKET_SIZE];
@@ -62,12 +63,12 @@ void hashTableInsert(const wchar_t* ch, int docId)
 {
 	int toBucket = wchHash(ch);
 	bool found = false;
-	//for (Node* iter = hashTable[toBucket]->pHead; iter; iter = iter->nxt) {
-	//	if (iter->value == docId) {
-	//		found = true;
-	//		break;
-	//	}
-	//}
+	for (Node* iter = hashTable[toBucket]->pHead; iter; iter = iter->nxt) {
+		if (iter->value == docId) {
+			found = true;
+			break;
+		}
+	}
 
 	if (!found)
 		insertBack(hashTable[toBucket], docId);
@@ -327,41 +328,29 @@ bool saveInvTable(const wchar_t* outputPath)
 	return true;
 }
 
-int loadInvTable(const wchar_t* inputPath)
+bool loadInvTable(const wchar_t* inputPath)
 {
 	FILE* fin = _wfopen(inputPath, L"r,ccs=UTF-8");
 
 	if (!fin)
-		return -1;
-
-	for (int i = 0; i < BUCKET_SIZE; i++) {
-		hashTable[i] = linkedListInit();
-		if (!hashTable[i])
-			return -1;
-	}
-
-	nFilesRead = 0;
+		return false;
 
 	for (int i = 0; i < BUCKET_SIZE; i++) {
 		if (i % (int)(BUCKET_SIZE / 10) == 0) {
 			fprintf(stderr, "Loading...\n");
 		}
+		
 		int size = 0;
-		fwscanf(fin, L"%d", &size);
+		size = readInt(fin);
 		while (size-- > 0) {
 			int x = 0;
-			fwscanf(fin, L"%d", &x);
-
-			if (x + 1 > nFilesRead)
-				nFilesRead = x + 1;
-
+			x = readInt(fin);
 			insertBack(hashTable[i], x);
 		}
 	}
 
 	fclose(fin);
-
-	return nFilesRead;
+	return true;
 }
 
 void releaseInvTable()

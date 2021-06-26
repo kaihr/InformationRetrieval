@@ -14,7 +14,7 @@ void buildHashTable(const wchar_t *path);
 
 bool saveInvTable(const wchar_t *outputPath);
 
-int loadInvTable(const wchar_t* inputPath);
+bool loadInvTable(const wchar_t* inputPath);
 
 void releaseInvTable();
 
