@@ -72,9 +72,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\myStuff\Visual Leak Detector\include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\myStuff\Visual Leak Detector\lib\Win32;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);C:\myStuff\Visual Leak Detector\include;</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);C:\myStuff\Visual Leak Detector\lib\Win32;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -139,19 +143,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Constant.h" />
+    <ClInclude Include="FastInputOutput.h" />
+    <ClInclude Include="Lazy.h" />
     <ClInclude Include="LinkedList.h" />
+    <ClInclude Include="Pair.h" />
+    <ClInclude Include="SearchQuery.h" />
     <ClInclude Include="SimpleSearchEngine.h" />
-    <ClInclude Include="StopWords.h" />
+    <ClInclude Include="Sort.h" />
     <ClInclude Include="TextNormalizer.h" />
     <ClInclude Include="TextProcessing.h" />
+    <ClInclude Include="Updater.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FastInputOutput.cpp" />
+    <ClCompile Include="Lazy.cpp" />
     <ClCompile Include="LinkedList.cpp" />
+    <ClCompile Include="Pair.cpp" />
+    <ClCompile Include="SearchQuery.cpp" />
     <ClCompile Include="SimpleSearchEngine.cpp" />
+    <ClCompile Include="Sort.cpp" />
     <ClCompile Include="Source.cpp" />
-    <ClCompile Include="StopWords.cpp" />
     <ClCompile Include="TextNormalizer.cpp" />
     <ClCompile Include="TextProcessing.cpp" />
+    <ClCompile Include="Updater.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

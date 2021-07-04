@@ -10,7 +10,6 @@ wchar_t* readFile(const wchar_t* inputPath)
 	if (!fin)
 		return nullptr;
 
-	wchar_t last = 65535;
 	int fileLen = 0;
 	while (true) {
 		wchar_t ch = fgetwc(fin);
@@ -18,14 +17,6 @@ wchar_t* readFile(const wchar_t* inputPath)
 		if (feof(fin))
 			break;
 
-		ch = wideCharNormalize(ch);
-
-		if (ch == ' ' || ch == '\n') {
-			if (ch == last || last == 65535)
-				continue;
-		}
-
-		last = ch;
 		fileLen++;
 	}
 
@@ -35,25 +26,15 @@ wchar_t* readFile(const wchar_t* inputPath)
 	wchar_t* wstr = new wchar_t[fileLen + 3];
 	int iter = 0;
 
-	last = 65535;
-	fclose(fin);
-
-	fin = _wfopen(inputPath, L"r,ccs=UTF-8");
-
+	fseek(fin, 0, SEEK_SET);
+	
 	while (true) {
 		wchar_t ch = fgetwc(fin);
-		ch = wideCharNormalize(ch);
 
-		if (feof(fin))
+		if(feof(fin))
 			break;
 
-		if (ch == ' ' || ch == '\n') {
-			if (ch == last || last == 65535)
-				continue;
-		}
-
 		wstr[iter++] = ch;
-		last = ch;
 	}
 
 	wstr[iter++] = L'\0';
@@ -63,51 +44,45 @@ wchar_t* readFile(const wchar_t* inputPath)
 	return wstr;
 }
 
-void wordToken(const wchar_t* _text)
+wchar_t** splitToken(const wchar_t* _text, int& nTok, const wchar_t *delim)
 {
 	int length = wcslen(_text);
 	wchar_t* text = new wchar_t[length + 1];
+	wchar_t* currentTok;
+	wchar_t* pt = nullptr;
 	wcscpy(text, _text);
 
-	wchar_t* currentWord;
-	wchar_t* pt;
+	nTok = 0;
+	currentTok = wcstok(text, delim, &pt);
+	while (currentTok != nullptr) {
+		nTok++;
 
-	wchar_t delim[] = L" ";
+		currentTok = wcstok(nullptr, delim, &pt);
+	}
 
-	currentWord = wcstok(text, delim, &pt);
+	wchar_t** sentences = new wchar_t* [nTok];
+	wcscpy(text, _text);
 
-	bool first = true;
+	nTok = 0;
+	currentTok = wcstok(text, delim, &pt);
+	while (currentTok != nullptr) {
+		sentences[nTok] = new wchar_t[wcslen(currentTok) + 1];
+		wcscpy(sentences[nTok], currentTok);
+		nTok++;
 
-	while (currentWord != nullptr) {
-		if (!first)
-			wprintf(L" ");
-		first = false;
-
-		wprintf(L"%ls", currentWord);
-		currentWord = wcstok(nullptr, delim, &pt);
+		currentTok = wcstok(nullptr, delim, &pt);
 	}
 
 	delete[] text;
+	return sentences;
 }
 
-void sentenceToken(const wchar_t* _text)
+wchar_t** wordToken(const wchar_t* _text, int& nWords)
 {
-	int length = wcslen(_text);
-	wchar_t* text = new wchar_t[length + 1];
-	wcscpy(text, _text);
+	return splitToken(_text, nWords, L" ");
+}
 
-	wchar_t* currentSentence;
-	wchar_t* pt;
-
-	wchar_t delim[] = L".,:;'\"!()\n";
-
-	currentSentence = wcstok(text, delim, &pt);
-	while (currentSentence != nullptr) {
-		//wprintf(L"%ls\n", currentSentence);
-		currentSentence = wcstok(nullptr, delim, &pt);
-		wordToken(currentSentence);
-		wprintf(L"\n");
-	}
-
-	delete[] text;
+wchar_t** sentenceToken(const wchar_t* _text, int &nSentences)
+{
+	return splitToken(_text, nSentences, L".,:;'\"!()\n");
 }

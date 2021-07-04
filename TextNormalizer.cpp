@@ -1,42 +1,140 @@
-#include "TextNormalizer.h"
-#include "stdio.h"
+﻿#include "TextNormalizer.h"
+#include <stdio.h>
+#include <wchar.h>
 
-bool isIn(wchar_t ch, int set[], int nElem) {
-	for (int i = 0; i < nElem; i++)
+int isIn(wchar_t ch, const wchar_t* set)
+{
+	int n = wcslen(set);
+
+	for (int i = 0; i < n; i++)
 		if (ch == set[i])
-			return true;
+			return i;
 
-	return false;
+	return -1;
 }
 
-wchar_t wideCharNormalize(wchar_t ch)
+wchar_t toLowerCase(wchar_t ch)
 {
-	int a[] = { 97, 224, 225, 7843, 227, 7841, 259, 7857, 7855, 7859, 7861, 7863, 226, 7847, 7845, 7849, 7851, 7853, 192, 193, 7842, 195, 7840, 258, 7856, 7854, 7858, 7860, 7862, 194, 7846, 7844, 7848, 7850, 7852 };
-	int d[] = { 100, 273, 272 };
-	int e[] = { 101, 232, 233, 7867, 7869, 7865, 234, 7873, 7871, 7875, 7877, 7879, 200, 201, 7866, 7868, 7864, 202, 7872, 7870, 7874, 7876, 7878 };
-	int i[] = { 105, 236, 237, 7881, 297, 7883, 204, 205, 7880, 296, 7882 };
-	int o[] = { 111, 242, 243, 7887, 245, 7885, 244, 7891, 7889, 7893, 7895, 7897, 417, 7901, 7899, 7903, 7905, 7907, 210, 211, 7886, 213, 7884, 212, 7890, 7888, 7892, 7894, 7896, 416, 7900, 7898, 7902, 7904, 7906 };
-	int u[] = { 117, 249, 250, 7911, 361, 7909, 432, 7915, 7913, 7917, 7919, 7921, 217, 218, 7910, 360, 7908, 431, 7914, 7912, 7916, 7918, 7920 };
-	int y[] = { 121, 7923, 253, 7927, 7929, 7925, 7922, 221, 7926, 7928, 7924 };
+	if ('a' <= ch && ch <= 'z')
+		return ch;
+
+	if ('A' <= ch && ch <= 'Z')
+		return ch - 'A' + 'a';
+
+	int foo;
+	wchar_t a[] = L"àáảãạăằắẳẵặâầấẩẫậÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬ";
+	wchar_t d[] = L"đĐ";
+	wchar_t e[] = L"èéẻẽẹêềếểễệÈÉẺẼẸÊỀẾỂỄỆ";
+	wchar_t i[] = L"ìíỉĩịÌÍỈĨỊ";
+	wchar_t o[] = L"òóỏõọôồốổỗộơờớởỡợÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢ";
+	wchar_t u[] = L"ùúủũụưừứửữựÙÚỦŨỤƯỪỨỬỮỰ";
+	wchar_t y[] = L"ỳýỷỹỵỲÝỶỸỴ";
+
+	if ((foo = isIn(ch, a)) != -1) {
+		int half = wcslen(a) / 2;
+		if (foo < half)
+			return a[foo];
+		else
+			return a[foo - half];
+	}
+
+	if ((foo = isIn(ch, d)) != -1) {
+		int half = wcslen(d) / 2;
+		if (foo < half)
+			return d[foo];
+		else
+			return d[foo - half];
+	}
+
+	if ((foo = isIn(ch, e)) != -1) {
+		int half = wcslen(e) / 2;
+		if (foo < half)
+			return e[foo];
+		else
+			return e[foo - half];
+	}
+
+	if ((foo = isIn(ch, i)) != -1) {
+		int half = wcslen(i) / 2;
+		if (foo < half)
+			return i[foo];
+		else
+			return i[foo - half];
+	}
+
+	if ((foo = isIn(ch, o)) != -1) {
+		int half = wcslen(o) / 2;
+		if (foo < half)
+			return o[foo];
+		else
+			return o[foo - half];
+	}
+
+	if ((foo = isIn(ch, u)) != -1) {
+		int half = wcslen(u) / 2;
+		if (foo < half)
+			return u[foo];
+		else
+			return u[foo - half];
+	}
+
+	if ((foo = isIn(ch, y)) != -1) {
+		int half = wcslen(y) / 2;
+		if (foo < half)
+			return y[foo];
+		else
+			return y[foo - half];
+	}
+
+	if(ch >= 128)
+		return ' ';
+
+	return ch;
+}
+
+wchar_t toLatinLetter(wchar_t ch)
+{
+	wchar_t a[] = L"àáảãạăằắẳẵặâầấẩẫậÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬ";
+	wchar_t d[] = L"đĐ";
+	wchar_t e[] = L"èéẻẽẹêềếểễệÈÉẺẼẸÊỀẾỂỄỆ";
+	wchar_t i[] = L"ìíỉĩịÌÍỈĨỊ";
+	wchar_t o[] = L"òóỏõọôồốổỗộơờớởỡợÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢ";
+	wchar_t u[] = L"ùúủũụưừứửữựÙÚỦŨỤƯỪỨỬỮỰ";
+	wchar_t y[] = L"ỳýỷỹỵỲÝỶỸỴ";
 
 	if ('a' <= ch && ch <= 'z')
 		return ch;
 	if ('A' <= ch && ch <= 'Z')
 		return ch - 'A' + 'a';
-	if (isIn(ch, a, 35))
+	if (isIn(ch, a) != -1)
 		return L'a';
-	if (isIn(ch, d, 3))
+	if (isIn(ch, d) != -1)
 		return L'd';
-	if (isIn(ch, e, 23))
+	if (isIn(ch, e) != -1)
 		return L'e';
-	if (isIn(ch, i, 11))
+	if (isIn(ch, i) != -1)
 		return L'i';
-	if (isIn(ch, o, 35))
+	if (isIn(ch, o) != -1)
 		return L'o';
-	if (isIn(ch, u, 23))
+	if (isIn(ch, u) != -1)
 		return L'u';
-	if (isIn(ch, y, 11))
+	if (isIn(ch, y) != -1)
 		return L'y';
-	
+
+	if (ch >= 128)
+		return ' ';
+
 	return ch;
+}
+
+void toLowerCase(wchar_t* str)
+{
+	for (int i = 0, nChar = wcslen(str); i < nChar; i++)
+		str[i] = toLowerCase(str[i]);
+}
+
+void toLatinLetter(wchar_t* str)
+{
+	for (int i = 0, nChar = wcslen(str); i < nChar; i++)
+		str[i] = toLatinLetter(str[i]);
 }
