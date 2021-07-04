@@ -8,15 +8,17 @@
 #include "FastInputOutput.h"
 #include "Constant.h"
 #include "Lazy.h"
+#include "Tuple.h"
 
 #include <stdio.h>
 #include <wchar.h>
 #include <Windows.h>
 #include <time.h>
 #include <assert.h>
+#include <math.h>
 
 int nFilesRead = 0;
-LinkedList *hashTable[BUCKET_SIZE];
+LinkedList *invIndex[NUMBER_OF_TERMS];
 
 int isFirstRun()
 {
@@ -34,10 +36,10 @@ int isFirstRun()
 
 bool init()
 {
-	for (int i = 0; i < BUCKET_SIZE; i++) {
-		hashTable[i] = linkedListInit();
+	for (int i = 0; i < NUMBER_OF_TERMS; i++) {
+		invIndex[i] = linkedListInit();
 
-		if (!hashTable[i])
+		if (!invIndex[i])
 			return false;
 	}
 
@@ -51,7 +53,7 @@ int wchHash(const wchar_t* wstr)
 
 	for (int i = 0; i < n; i++) {
 		long long foo = ((long long)ans) * 257;
-		ans = ((foo % BUCKET_SIZE) + wstr[i]) % BUCKET_SIZE;
+		ans = ((foo % NUMBER_OF_TERMS) + wstr[i]) % NUMBER_OF_TERMS;
 	}
 	
 	return ans;
@@ -59,32 +61,31 @@ int wchHash(const wchar_t* wstr)
 
 void hashTableInsert(const wchar_t* ch, int docId)
 {
-	int toBucket = wchHash(ch);
+	int termID = wchHash(ch);
 	bool found = false;
 
 	//wait...
 	//how about you just check the last element because the docID are insert in ascending order anyway
 
-	loadListFromLine(hashTable[toBucket], L"inverted_index.txt", toBucket);
-	if (!isEmpty(hashTable[toBucket]) && (hashTable[toBucket]->pTail->value == docId))
+	loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
+
+	if (!isEmpty(invIndex[termID]) && (invIndex[termID]->pTail->value == docId))
 		found = true;
 
-	/*for (Node* iter = hashTable[toBucket]->pHead; iter; iter = iter->nxt) {
-		if (iter->value == docId) {
-			found = true;
-			break;
-		}
-	}*/
+	if (!found) {
+		setDocFreq(termID, getDocFreq(termID) + 1);
+		insertBack(invIndex[termID], docId);
+	}
 
-	if (!found)
-		insertBack(hashTable[toBucket], docId);
+	invIndex[termID]->pTail->freq++;
 }
 
 void hashTableRemove(const wchar_t* ch, int docId)
 {
-	int toBucket = wchHash(ch);
-	loadListFromLine(hashTable[toBucket], L"inverted_index.txt", toBucket);
-	eraseValue(hashTable[toBucket], docId);
+	int termID = wchHash(ch);
+	loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
+	eraseValue(invIndex[termID], docId);
+	setDocFreq(termID, getDocFreq(termID) - 1);
 }
 
 bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords)
@@ -165,6 +166,9 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	wchar_t currentWord[512];
 
+	int nTerms = 0;
+	int* termList = new int[nTok * 6];
+
 	for (int i = 0; i < nTok; i++) {
 		wcscpy(currentWord, L"");
 		for (int j = i; j < nTok && j < i + 6; j++) {
@@ -173,10 +177,19 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 			wcscat(currentWord, token[j]);
 
 			//wprintf(L"%ls\n", currentWord);
-			int index = wchHash(currentWord);
-			loadListFromLine(hashTable[index], L"inverted_index.txt", index);
-			for (Node* iter = hashTable[index]->pHead; iter; iter = iter->nxt) {
-				score[iter->value].a += (1 << (j - i + 1));
+			int termID = wchHash(currentWord);
+			loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
+			fwprintf(stderr, L"%ls %.4lf\n", currentWord, log10(1.0 * nFiles / (1 + getDocFreq(termID))));
+			for (Node* iter = invIndex[termID]->pHead; iter; iter = iter->nxt) {
+				int tf = iter->freq;
+				int df = getDocFreq(termID);
+				double idf = log10(1.0 * nFiles / (1 + df));
+
+				double docWeight = tf * idf; //tf-idf of termID of doc with id iter->value
+
+				double queryWeight = idf;
+
+				score[iter->value].a += queryWeight * docWeight;
 			}
 		}
 	}
@@ -186,14 +199,14 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 	wprintf(L"Search results for: %ls", originalKeywords);
 
 	for (int i = 0; i < 100; i++) {
-		int currentScore = score[i].a;
+		double currentScore = score[i].a;
 
 		if (currentScore == 0)
 			break;
 
 		int currentFileId = score[i].b;
 
-		wprintf(L"- %ls, rating: %d\n", pathList[currentFileId * 2], currentScore);
+		wprintf(L"- %ls, rating: %.4lf\n", pathList[currentFileId * 2], currentScore);
 
 		if ((i + 1) % 10 == 0) {
 			wprintf(L"Continue searching ? (Enter 1 to continue, other keys to stop): ");
@@ -208,6 +221,7 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 	wprintf(L"Press any button to continue\n");
 	getchar();
 
+	delete[] termList;
 	delete[] score;
 }
 
@@ -273,7 +287,8 @@ bool remFile(int nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar
 
 void buildHashTable(const wchar_t* path)
 {
-	loadAll();
+	initDocFreq();
+
 	time_t beginTime = clock();
 	if (!init()) {
 		fwprintf(stderr, L"Not enough memory\n");
@@ -297,12 +312,16 @@ void buildHashTable(const wchar_t* path)
 
 	listDirectoryContent(path, stopWords, nWords);
 
-	if (!saveInvTable(L"inverted_index.txt"))
-		fwprintf(stderr, L"Can not save inverted index table\n");
-
 	for (int i = 0; i < nWords; i++)
 		delete[] stopWords[i];
 	delete[] stopWords;
+
+	if (!saveInvIndex(L"inverted_index.txt"))
+		fwprintf(stderr, L"Can not save inverted index table\n");
+
+	if (!saveDocFreq(L"doc_freq.txt"))
+		fwprintf(stderr, L"Can not save documents frequencies\n");
+
 	releaseInvTable();
 
 	FILE* config = _wfopen(L"config.txt", L"w,ccs=UTF-8");
@@ -312,26 +331,28 @@ void buildHashTable(const wchar_t* path)
 	fprintf(stderr, "Elapsed time: %.5lf seconds", (clock() - beginTime) * 1.0 / CLOCKS_PER_SEC);
 }
 
-bool saveInvTable(const wchar_t* outputPath)
+bool saveInvIndex(const wchar_t* outputPath)
 {
-	loadInvTable(L"inverted_index.txt");
+	loadInvIndex(L"inverted_index.txt");
 
 	FILE* fout = _wfopen(outputPath, L"w,ccs=UTF-8");
 
 	if (!fout)
 		return false;
 
-	for (int i = 0; i < BUCKET_SIZE; i++) {
+	for (int i = 0; i < NUMBER_OF_TERMS; i++) {
 		int len = 0;
 
-		for (Node* iter = hashTable[i]->pHead; iter; iter = iter->nxt)
+		for (Node* iter = invIndex[i]->pHead; iter; iter = iter->nxt)
 			len++;
 
 		writeInt(fout, len);
 		fputwc(L' ', fout);
 
-		for (Node* iter = hashTable[i]->pHead; iter; iter = iter->nxt) {
+		for (Node* iter = invIndex[i]->pHead; iter; iter = iter->nxt) {
 			writeInt(fout, iter->value);
+			fputwc(L' ', fout);
+			writeInt(fout, iter->freq);
 			fputwc(L' ', fout);
 		}
 
@@ -343,18 +364,18 @@ bool saveInvTable(const wchar_t* outputPath)
 	return true;
 }
 
-bool loadInvTable(const wchar_t* inputPath)
+bool loadInvIndex(const wchar_t* inputPath)
 {
 	FILE* fin = _wfopen(inputPath, L"r,ccs=UTF-8");
 
 	if (!fin)
 		return false;
 
-	for (int i = 0; i < BUCKET_SIZE; i++) {
-		if(i % (BUCKET_SIZE / 10) == 0)
+	for (int i = 0; i < NUMBER_OF_TERMS; i++) {
+		if(i % (NUMBER_OF_TERMS / 10) == 0)
 			wprintf(L"Loading...\n");
 
-		loadListFromLine(hashTable[i], L"inverted_index.txt", i);
+		loadListFromLine(invIndex[i], L"inverted_index.txt", i);
 	}
 
 	fclose(fin);
@@ -363,9 +384,9 @@ bool loadInvTable(const wchar_t* inputPath)
 
 void releaseInvTable()
 {
-	for (int i = 0; i < BUCKET_SIZE; i++) {
-		if (i % ((int)BUCKET_SIZE / 10) == 0)
+	for (int i = 0; i < NUMBER_OF_TERMS; i++) {
+		if (i % ((int)NUMBER_OF_TERMS / 10) == 0)
 			fprintf(stderr, "Unloading...\n");
-		eraseLinkedList(hashTable[i]);
+		eraseLinkedList(invIndex[i]);
 	}
 }

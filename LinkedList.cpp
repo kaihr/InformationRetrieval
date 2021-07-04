@@ -53,11 +53,12 @@ Node* findTail(LinkedList* ls)
 	return ls->pTail;
 }
 
-Node* nodeInit(int value)
+Node* nodeInit(int value, int freq)
 {
 	Node* ans = new Node();
 	ans->pre = ans->nxt = nullptr;
 	ans->value = value;
+	ans->freq = freq;
 
 	return ans;
 }
@@ -68,9 +69,9 @@ void linkNode(Node* a, Node* b)
 	b->pre = a;
 }
 
-void insertFront(LinkedList* ls, int value)
+void insertFront(LinkedList* ls, int value, int freq)
 {
-	Node* newHead = nodeInit(value);
+	Node* newHead = nodeInit(value, freq);
 
 	if (isEmpty(ls)) {
 		ls->pHead = ls->pTail = newHead;
@@ -81,14 +82,14 @@ void insertFront(LinkedList* ls, int value)
 	ls->pHead = newHead;
 }
 
-void insertBack(LinkedList* ls, int value)
+void insertBack(LinkedList* ls, int value, int freq)
 {
 	if (isEmpty(ls)) {
-		insertFront(ls, value);
+		insertFront(ls, value, freq);
 		return;
 	}
 
-	Node* newTail = nodeInit(value);
+	Node* newTail = nodeInit(value, freq);
 	linkNode(ls->pTail, newTail);
 	ls->pTail = newTail;
 }

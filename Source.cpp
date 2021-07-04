@@ -13,12 +13,11 @@
 #include <Windows.h>
 #include <time.h>
 
-
 int main() {
 	srand(time(nullptr));
 
 	if (isFirstRun()) {
-		buildHashTable(L"new train");
+		buildHashTable(L"shittyTrain");
 		wprintf(L"\nPlease re-start the program.\n");
 		getchar();
 		return 0;
@@ -31,6 +30,7 @@ int main() {
 		return 0;
 	}
 
+	loadDocFreq(L"doc_freq.txt");
 	calcPos(L"inverted_index.txt");
 
 	wchar_t pathDelim[] = L"\xfeff\n";
@@ -67,7 +67,7 @@ int main() {
 
 	while (true) {
 		system("cls");
-		wprintf(L"=== SHITTY SEARCH ENGINE ===\n");
+		wprintf(L"=== INFORMATION RETRIEVAL 69420 ===\n");
 		wprintf(L"1. Search\n");
 		wprintf(L"2. Add/Update files to search engine\n");
 		wprintf(L"3. Remove files from search engine\n");
@@ -121,7 +121,7 @@ int main() {
 			getchar();
 		}
 	}
-	
+
 	for (int i = 0; i < nStopWords; i++)
 		delete[] stopWords[i];
 	delete[] stopWords;
@@ -131,8 +131,11 @@ int main() {
 	delete[] pathList;
 
 	wprintf(L"Saving...\n");
-	saveInvTable(L"inverted_index.txt");
+	
+	saveInvIndex(L"inverted_index.txt");
 	releaseInvTable();
+
+	saveDocFreq(L"doc_freq.txt");
 
 	return 0;
 }

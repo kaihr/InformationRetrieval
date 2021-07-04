@@ -1,6 +1,7 @@
 #pragma once
 struct Node {
 	int value;
+	int freq;
 	Node* pre;
 	Node* nxt;
 };
@@ -17,11 +18,11 @@ Node* findPos(LinkedList* ls, int pos);
 Node* findValue(LinkedList* ls, int value);
 Node* findTail(LinkedList* ls);
 
-Node* nodeInit(int value = 0);
+Node* nodeInit(int value = 0, int freq = 0);
 void linkNode(Node* a, Node* b);
 
-void insertFront(LinkedList* ls, int value);
-void insertBack(LinkedList* ls, int value);
+void insertFront(LinkedList* ls, int value, int freq = 0);
+void insertBack(LinkedList* ls, int value, int freq = 0);
 void insertPos(LinkedList* ls, int pos, int value);
 void insertKeepOrder(LinkedList* ls, int value);
 
