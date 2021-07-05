@@ -153,6 +153,7 @@
     <ClInclude Include="Sort.h" />
     <ClInclude Include="TextNormalizer.h" />
     <ClInclude Include="TextProcessing.h" />
+    <ClInclude Include="Tuple.h" />
     <ClInclude Include="Updater.h" />
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +167,7 @@
     <ClCompile Include="Source.cpp" />
     <ClCompile Include="TextNormalizer.cpp" />
     <ClCompile Include="TextProcessing.cpp" />
+    <ClCompile Include="Tuple.cpp" />
     <ClCompile Include="Updater.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

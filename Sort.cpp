@@ -82,3 +82,11 @@ void mergeSort(void* a, int nElem, int nBytes, f cmp)
 	delete[] buffer;
 }
 
+bool intCmp(void* lhs, void* rhs)
+{
+	int lhsVal = *((int*)lhs);
+	int rhsVal = *((int*)rhs);
+
+	return lhsVal < rhsVal;
+}
+

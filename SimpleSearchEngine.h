@@ -12,9 +12,9 @@ bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWor
 
 void buildHashTable(const wchar_t *path);
 
-bool saveInvTable(const wchar_t *outputPath);
+bool saveInvIndex(const wchar_t *outputPath);
 
-bool loadInvTable(const wchar_t* inputPath);
+bool loadInvIndex(const wchar_t* inputPath);
 
 void releaseInvTable();
 

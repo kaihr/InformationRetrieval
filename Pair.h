@@ -1,6 +1,7 @@
 #pragma once
 struct Pair {
-	int a, b;
+	double a;
+	int b;
 };
 
 bool pairCmp(void* lhs, void* rhs);
