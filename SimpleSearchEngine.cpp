@@ -9,6 +9,7 @@
 #include "Constant.h"
 #include "Lazy.h"
 #include "Tuple.h"
+#include "StringMatching.h"
 
 #include <stdio.h>
 #include <wchar.h>
@@ -163,6 +164,7 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	toLatinLetter(modifiedKeyWords);
 	wchar_t** token = splitToken(modifiedKeyWords, nTok, L" .,:;'\"!()\n");
+	modifiedKeyWords[wcslen(modifiedKeyWords) - 1] = '\0';
 
 	wchar_t currentWord[512];
 
@@ -201,25 +203,63 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	mergeSort((void*)score, 120, sizeof(Pair), pairCmp);
 
-	wprintf(L"Search results for: %ls", originalKeywords);
 
-	for (int i = 0; i < 60 && i < nFiles; i++) {
-		double currentScore = score[i].a;
-		int currentFileId = score[i].b;
+	for (int i = 0; i < 60 && i < nFiles; ) {
+		system("cls");
+		wprintf(L"=== Search results for: %ls ===\n", modifiedKeyWords);
+		int j = i;
+		
+		int num = 0;
 
-		wprintf(L"- %ls, rating: %.4lf\n", pathList[currentFileId * 2], currentScore);
+		while (j < 60 && j < nFiles && j < i + 10 && score[j].a > 0.0) {
+			double currentScore = score[j].a;
+			int currentFileId = score[j].b;
 
-		if ((i + 1) % 10 == 0) {
-			wprintf(L"Continue searching ? (Enter 1 to continue, other keys to stop): ");
-			int option;
-			wscanf(L"%d", &option);
-			if (option != 1)
-				break;
+			wchar_t* absolutePath = _wfullpath(nullptr, pathList[2 * currentFileId], 4096);
+
+			wprintf(L"%2d. %ls, rating: %.4lf\n", ++num, absolutePath, currentScore);
+			delete[] absolutePath;
+
+			j++;
 		}
+
+		wprintf(L"=======================================================\n");
+		wprintf(L"- Type a number (1 - %d) to view the correspoding text.\n", num);
+		wprintf(L"- Type 0 to stop searching.\n");
+		wprintf(L"- Type 11 to show more results.\n");
+		int option = 0;
+		
+		do {
+			wprintf(L"Your choice?: ");
+			wscanf(L"%d", &option);
+		} while (!(option == 0 || option == 11 || (1 <= option && option <= num)));
+
+		if (option == 0)
+			break;
+
+		if (option == 11) {
+			i = j;
+			continue;
+		}
+
+		option--;
+
+		int docID = score[i + option].b;
+
+		wchar_t *absolutePath = _wfullpath(nullptr, pathList[2 * docID], 4096);
+
+		system("cls");
+		extractResults(stdout, absolutePath, pathList[2 * docID + 1], token, nTok);
+
+		delete[] absolutePath;
+		
+		getchar();
+		wprintf(L"Press Enter to continue\n");
+		getchar();
 	}
 
 	getchar();
-	wprintf(L"Press any button to continue\n");
+	wprintf(L"Press Enter to continue\n");
 	getchar();
 
 	delete[] score;
@@ -283,6 +323,100 @@ bool remFile(int nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar
 	fclose(fout);
 
 	return true;
+}
+
+void extractResults(FILE* fout, const wchar_t* filePath, const wchar_t* metaDataPath, wchar_t** keyword, int nWords)
+{
+	//extract at most 5 sentences contain information relate to keyword
+	fwprintf(fout, L"=== Search results for \"");
+
+	for (int i = 0; i < nWords; i++) {
+		if (i != 0)
+			fwprintf(fout, L" ");
+		fwprintf(fout, L"%ls", keyword[i]);
+	}
+
+	fwprintf(fout, L"\" in \"%ls\" ===\n", filePath);
+
+	wchar_t* text = readFile(metaDataPath);
+	int nSentences = 0;
+	wchar_t** sentence = sentenceToken(text, nSentences);
+	delete[] text;
+
+	//for (int i = 0; i < nSentences; i++)
+	//	fwprintf(stderr, L"%ls\n", sentence[i]);
+
+	int cntMark = 0;
+
+	bool* filter = new bool[nSentences + 1];
+
+	for (int i = 0; i <= nSentences; i++)
+		filter[i] = false;
+
+	wchar_t pattern[512];
+
+	for (int length = N_GRAM; length > 0 && cntMark < 5; length--) {
+		for (int startPos = 0; startPos + length - 1 < nWords && cntMark < 5; startPos++) {
+			wcscpy(pattern, L"");
+			for (int i = 0; i < length; i++) {
+				if (i != 0)
+					wcscat(pattern, L" ");
+				wcscat(pattern, keyword[startPos + i]);
+			}
+
+			for (int i = 0; i < nSentences && cntMark < 5; i++) {
+				if (filter[i])
+					continue;
+
+				if (isMatched(sentence[i], pattern)) {
+					cntMark++;
+					filter[i] = true;
+				}
+			}
+		}
+	}
+
+	text = readFile(filePath);
+	int orgTextNSentences = 0;
+	wchar_t** originalText = sentenceToken(text, orgTextNSentences);
+	delete[] text;
+
+	int actualSentenceID = 0;
+
+	for (int i = 0; i < orgTextNSentences; i++)
+	{
+		int nWordInSentence = 0;
+
+		for (int j = 0, curLen = wcslen(originalText[i]); j < curLen; j++) {
+			wchar_t foo = toLatinLetter(originalText[i][j]);
+			if (foo == L' ')
+				originalText[i][j] = L' ';
+		}
+
+		wchar_t** wordTok = wordToken(originalText[i], nWordInSentence);
+
+		if (nWordInSentence) {
+			if (filter[actualSentenceID]) {
+				fwprintf(fout, L" -- ");
+				for (int j = 0; j < nWordInSentence; j++)
+					fwprintf(fout, L"%ls%lc", wordTok[j], L" \n"[j == nWordInSentence - 1]);
+			}
+
+			actualSentenceID++;
+		}
+
+		for (int j = 0; j < nWordInSentence; j++)
+			delete[] wordTok[j];
+		delete[] wordTok;
+	}
+
+	delete[] filter;
+	for (int i = 0; i < orgTextNSentences; i++)
+		delete[] originalText[i];
+	delete[] originalText;
+	for (int i = 0; i < nSentences; i++)
+		delete[] sentence[i];
+	delete[] sentence;
 }
 
 void buildHashTable(const wchar_t* path)

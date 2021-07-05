@@ -14,6 +14,8 @@
 #include <time.h>
 
 int main() {
+	_setmode(_fileno(stdout), _O_U16TEXT);
+
 	srand(time(nullptr));
 
 	if (isFirstRun()) {

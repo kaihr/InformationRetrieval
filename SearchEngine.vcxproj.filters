@@ -51,6 +51,9 @@
     <ClInclude Include="Tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="StringMatching.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TextNormalizer.cpp">
@@ -87,6 +90,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tuple.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringMatching.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
