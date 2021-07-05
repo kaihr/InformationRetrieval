@@ -17,7 +17,7 @@ int main() {
 	srand(time(nullptr));
 
 	if (isFirstRun()) {
-		buildHashTable(L"shittyTrain");
+		buildHashTable(L"new train");
 		wprintf(L"\nPlease re-start the program.\n");
 		getchar();
 		return 0;

@@ -51,9 +51,6 @@
     <ClInclude Include="Tuple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DocMetadata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TextNormalizer.cpp">
@@ -90,9 +87,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tuple.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DocMetadata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

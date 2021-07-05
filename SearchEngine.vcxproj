@@ -144,7 +144,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Constant.h" />
-    <ClInclude Include="DocMetadata.h" />
     <ClInclude Include="FastInputOutput.h" />
     <ClInclude Include="Lazy.h" />
     <ClInclude Include="LinkedList.h" />
@@ -158,7 +157,6 @@
     <ClInclude Include="Updater.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DocMetadata.cpp" />
     <ClCompile Include="FastInputOutput.cpp" />
     <ClCompile Include="Lazy.cpp" />
     <ClCompile Include="LinkedList.cpp" />

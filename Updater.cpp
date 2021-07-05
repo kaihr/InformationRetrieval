@@ -2,6 +2,7 @@
 #include "TextProcessing.h"
 #include "SimpleSearchEngine.h"
 #include "TextNormalizer.h"
+#include "Constant.h"
 
 #include <stdio.h>
 #include <wchar.h>
@@ -54,7 +55,7 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 				//nextJ != -1 --> nextJ is the largest number such that [j, nextJ) is a stop word
 
 				wcscpy(currentWord, L"");
-				for (int k = j; k < nWords && k < j + 6; k++) {
+				for (int k = j; k < nWords && k < j + N_GRAM; k++) {
 					if (j != k)
 						wcscat(currentWord, L" ");
 					wcscat(currentWord, words[k]);
@@ -66,7 +67,7 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 				if (nextJ == -1) {
 					wcscpy(currentWord, L"");
 					wcscpy(tmp, L"");
-					for (int k = j; k < nWords && k < j + 6; k++) {
+					for (int k = j; k < nWords && k < j + N_GRAM; k++) {
 						if (j != k)
 							wcscat(currentWord, L" ");
 

@@ -166,20 +166,20 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	wchar_t currentWord[512];
 
-	int nTerms = 0;
-	int* termList = new int[nTok * 6];
-
 	for (int i = 0; i < nTok; i++) {
 		wcscpy(currentWord, L"");
-		for (int j = i; j < nTok && j < i + 6; j++) {
+		for (int j = i; j < nTok && j < i + N_GRAM; j++) {
 			if (j != i)
 				wcscat(currentWord, L" ");
 			wcscat(currentWord, token[j]);
 
 			//wprintf(L"%ls\n", currentWord);
+			
 			int termID = wchHash(currentWord);
 			loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
-			fwprintf(stderr, L"%ls %.4lf\n", currentWord, log10(1.0 * nFiles / (1 + getDocFreq(termID))));
+			
+			//fwprintf(stderr, L"%ls %.4lf\n", currentWord, log10(1.0 * nFiles / (1 + getDocFreq(termID))));
+			
 			for (Node* iter = invIndex[termID]->pHead; iter; iter = iter->nxt) {
 				int tf = iter->freq;
 				int df = getDocFreq(termID);
@@ -196,14 +196,15 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	mergeSort((void*)score, nFiles, sizeof(Pair), pairCmp);
 
+	for (int i = 0; i < 120 && i < nFiles; i++)
+		score[i].a = score[i].a / sqrt(getDocNorm(pathList[2 * score[i].b + 1], nFiles));
+
+	mergeSort((void*)score, 120, sizeof(Pair), pairCmp);
+
 	wprintf(L"Search results for: %ls", originalKeywords);
 
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 60 && i < nFiles; i++) {
 		double currentScore = score[i].a;
-
-		if (currentScore == 0)
-			break;
-
 		int currentFileId = score[i].b;
 
 		wprintf(L"- %ls, rating: %.4lf\n", pathList[currentFileId * 2], currentScore);
@@ -221,7 +222,6 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 	wprintf(L"Press any button to continue\n");
 	getchar();
 
-	delete[] termList;
 	delete[] score;
 }
 
