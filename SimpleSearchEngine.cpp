@@ -356,7 +356,7 @@ void extractResults(FILE* fout, const wchar_t* filePath, const wchar_t* metaData
 	wchar_t pattern[512];
 
 	for (int length = N_GRAM; length > 0 && cntMark < 5; length--) {
-		for (int startPos = 0; startPos + length < nWords && cntMark < 5; startPos++) {
+		for (int startPos = 0; startPos + length - 1 < nWords && cntMark < 5; startPos++) {
 			wcscpy(pattern, L"");
 			for (int i = 0; i < length; i++) {
 				if (i != 0)
