@@ -71,8 +71,8 @@ int main() {
 		system("cls");
 		wprintf(L"=== INFORMATION RETRIEVAL 69420 ===\n");
 		wprintf(L"1. Search\n");
-		wprintf(L"2. Add/Update files to search engine\n");
-		wprintf(L"3. Remove files from search engine\n");
+		wprintf(L"2. Add/Update a file to search engine\n");
+		wprintf(L"3. Remove a file from search engine\n");
 		wprintf(L"4. Quit\n");
 
 		int choice;
@@ -84,7 +84,7 @@ int main() {
 		}
 
 		if (choice == 1) {
-			fgetws(userInput, 256, stdin);
+			setbuf(stdin, nullptr);
 			wprintf(L"Searching for?: ");
 			fgetws(userInput, 256, stdin);
 
@@ -119,6 +119,7 @@ int main() {
 					wprintf(L"Done\n");
 			}
 
+			setbuf(stdin, nullptr);
 			wprintf(L"Press any button to continue\n");
 			getchar();
 		}
