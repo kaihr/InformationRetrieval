@@ -9,7 +9,7 @@ int wchHash(const wchar_t *wstr);
 void hashTableInsert(const wchar_t *ch, int docId);
 void hashTableRemove(const wchar_t* ch, int docId);
 
-bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords);
+bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords, int &nFilesRead);
 
 void buildHashTable(const wchar_t *path);
 
