@@ -18,7 +18,6 @@
 #include <assert.h>
 #include <math.h>
 
-int nFilesRead = 0;
 LinkedList *invIndex[NUMBER_OF_TERMS];
 
 int isFirstRun()
@@ -89,7 +88,7 @@ void hashTableRemove(const wchar_t* ch, int docId)
 	setDocFreq(termID, getDocFreq(termID) - 1);
 }
 
-bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords)
+bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords, int &nFilesRead)
 {
     WIN32_FIND_DATA fdFile;
     HANDLE hFind = nullptr;
@@ -115,7 +114,7 @@ bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWor
 
 		if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			wprintf(L"Directory: %ls\n", sPath);
-			listDirectoryContent(sPath, stopWords, nStopWords);
+			listDirectoryContent(sPath, stopWords, nStopWords, nFilesRead);
 		}
 		else {
 			wchar_t metaDataPath[2048] = L"";
@@ -168,32 +167,49 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	wchar_t currentWord[512];
 
+	int* uniqueSet = new int[nTok * N_GRAM];
+	int uniqueSetSize = 0;
+
 	for (int i = 0; i < nTok; i++) {
 		wcscpy(currentWord, L"");
 		for (int j = i; j < nTok && j < i + N_GRAM; j++) {
 			if (j != i)
 				wcscat(currentWord, L" ");
 			wcscat(currentWord, token[j]);
-
-			//wprintf(L"%ls\n", currentWord);
 			
 			int termID = wchHash(currentWord);
-			loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
-			
-			//fwprintf(stderr, L"%ls %.4lf\n", currentWord, log10(1.0 * nFiles / (1 + getDocFreq(termID))));
-			
-			for (Node* iter = invIndex[termID]->pHead; iter; iter = iter->nxt) {
-				int tf = iter->freq;
-				int df = getDocFreq(termID);
-				double idf = log10(1.0 * nFiles / (1 + df));
-
-				double docWeight = tf * idf; //tf-idf of termID of doc with id iter->value
-
-				double queryWeight = idf;
-
-				score[iter->value].a += queryWeight * docWeight;
-			}
+			uniqueSet[uniqueSetSize++] = termID;
 		}
+	}
+
+	mergeSort((void*)uniqueSet, uniqueSetSize, sizeof(int), intCmp);
+	
+	for (int i = 0; i < uniqueSetSize; ) {
+		int j = i;
+		while (j < uniqueSetSize && uniqueSet[i] == uniqueSet[j])
+			j++;
+
+		int termID = uniqueSet[i];
+		loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
+		
+		double df = getDocFreq(termID);
+
+		double querytf = (j - i);
+		double queryidf = log10(1.0 * nFiles / (1 + df));
+		double queryWeight = querytf * queryidf;
+
+		
+		for (Node* iter = invIndex[termID]->pHead; iter; iter = iter->nxt) {
+			double doctf = iter->freq;
+			double docidf = log10(1.0 * nFiles / (1 + df));
+			double docWeight = doctf * docidf;
+
+			score[iter->value].a += queryWeight * docWeight;
+		}
+
+		fwprintf(stderr, L"\n");
+
+		i = j;
 	}
 
 	mergeSort((void*)score, nFiles, sizeof(Pair), pairCmp);
@@ -451,7 +467,8 @@ void buildHashTable(const wchar_t* path)
 
 	mergeSort((void*)stopWords, nWords, sizeof(wchar_t*), wchComp);
 
-	listDirectoryContent(path, stopWords, nWords);
+	int nFilesRead = 0;
+	listDirectoryContent(path, stopWords, nWords, nFilesRead);
 
 	for (int i = 0; i < nWords; i++)
 		delete[] stopWords[i];
