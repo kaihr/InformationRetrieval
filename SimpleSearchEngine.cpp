@@ -224,6 +224,12 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 		}
 
 		wprintf(L"=======================================================\n");
+
+		if (num == 0) {
+			wprintf(L"Nothing to be found.\n");
+			break;
+		}
+
 		wprintf(L"- Type a number (1 - %d) to view the correspoding text.\n", num);
 		wprintf(L"- Type 0 to stop searching.\n");
 		wprintf(L"- Type 11 to show more results.\n");
@@ -253,12 +259,12 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 		delete[] absolutePath;
 		
-		getchar();
+		setbuf(stdin, nullptr);
 		wprintf(L"Press Enter to continue\n");
 		getchar();
 	}
 
-	getchar();
+	setbuf(stdin, nullptr);
 	wprintf(L"Press Enter to continue\n");
 	getchar();
 
@@ -369,6 +375,7 @@ void extractResults(FILE* fout, const wchar_t* filePath, const wchar_t* metaData
 					continue;
 
 				if (isMatched(sentence[i], pattern)) {
+					//fwprintf(stderr, L"%ls matched %ls\n", sentence[i], pattern);
 					cntMark++;
 					filter[i] = true;
 				}
