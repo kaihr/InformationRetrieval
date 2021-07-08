@@ -95,9 +95,9 @@ int main() {
 			fgetws(userInput, 256, stdin);
 
 			if (choice == 3)
-				wprintf(L"Enter file's path to add/update (no leading or trailing spaces): ");
+				wprintf(L"Enter file's ABSOLUTE path to add/update (no leading or trailing spaces): ");
 			else
-				wprintf(L"Enter file's path to remove (no leading or trailing spaces): ");
+				wprintf(L"Enter file's ABSOLUTE path to remove (no leading or trailing spaces): ");
 			
 			fgetws(userInput, 256, stdin);
 			userInput[wcslen(userInput) - 1] = '\0';
