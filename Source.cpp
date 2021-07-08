@@ -12,6 +12,7 @@
 #include <wchar.h>
 #include <Windows.h>
 #include <time.h>
+#include <locale.h>
 
 int main() {
 	_setmode(_fileno(stdout), _O_U16TEXT);
@@ -102,13 +103,15 @@ int main() {
 			fgetws(userInput, 256, stdin);
 			userInput[wcslen(userInput) - 1] = '\0';
 
+			time_t startTime = clock();
+
 			if (choice == 2) {
 				wprintf(L"Adding %ls to search engine...\n", userInput);
 				remFile(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords);
 				if (!addFile(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords))
 					wprintf(L"Can not add %ls to search engine\n", userInput);
 				else
-					wprintf(L"Done\n");
+					wprintf(L"Done. Elapsed time: %.5lf seconds\n", (clock() - startTime) * 1.00 / CLOCKS_PER_SEC);
 			}
 
 			if (choice == 3) {
@@ -116,7 +119,7 @@ int main() {
 				if (!remFile(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords))
 					wprintf(L"Remove failed, %ls did not exist in the search engine\n", userInput);
 				else
-					wprintf(L"Done\n");
+					wprintf(L"Done. Elapsed time: %.5lf seconds\n", (clock() - startTime) * 1.00 / CLOCKS_PER_SEC);
 			}
 
 			setbuf(stdin, nullptr);
