@@ -17,6 +17,7 @@
 #include <time.h>
 #include <assert.h>
 #include <math.h>
+#include <direct.h>
 
 LinkedList *invIndex[NUMBER_OF_TERMS];
 
@@ -207,8 +208,6 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 			score[iter->value].a += queryWeight * docWeight;
 		}
 
-		fwprintf(stderr, L"\n");
-
 		i = j;
 	}
 
@@ -233,7 +232,7 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 			wchar_t* absolutePath = _wfullpath(nullptr, pathList[2 * currentFileId], 4096);
 
-			wprintf(L"%2d. %ls, rating: %.4lf\n", ++num, absolutePath, currentScore);
+			wprintf(L"%2d. %ls\n", ++num, absolutePath);
 			delete[] absolutePath;
 
 			j++;
@@ -324,11 +323,18 @@ bool addFile(int& nFiles, const wchar_t* filePath, const wchar_t* pathPath, wcha
 bool remFile(int nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar_t** pathList, wchar_t** stopWords, int nStopWord)
 {
 	int docId = -1;
-	for (int i = 0; i < nFiles; i++) {
-		if (wcscmp(filePath, pathList[2 * i]) == 0) {
+	for (int i = 0; (i < nFiles) && (docId == -1); i++) {
+		wchar_t *fileAbsolutePath;
+		fileAbsolutePath = _wfullpath(nullptr, filePath, 4096);
+
+		wchar_t* listAbsolutePath;
+		listAbsolutePath = _wfullpath(nullptr, pathList[2 * i], 4096);
+
+		if (wcscmp(fileAbsolutePath, listAbsolutePath) == 0)
 			docId = i;
-			break;
-		}
+		
+		delete[] fileAbsolutePath;
+		delete[] listAbsolutePath;
 	}
 
 	if (docId == -1)
@@ -468,6 +474,9 @@ void buildHashTable(const wchar_t* path)
 	mergeSort((void*)stopWords, nWords, sizeof(wchar_t*), wchComp);
 
 	int nFilesRead = 0;
+
+	_wmkdir(L"compressed");
+
 	listDirectoryContent(path, stopWords, nWords, nFilesRead);
 
 	for (int i = 0; i < nWords; i++)
