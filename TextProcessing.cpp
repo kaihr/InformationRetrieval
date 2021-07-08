@@ -90,7 +90,7 @@ wchar_t** wordToken(const wchar_t* _text, int& nWords)
 
 wchar_t** sentenceToken(const wchar_t* _text, int &nSentences)
 {
-	return splitToken(_text, nSentences, L".,:;'\"!()\n");
+	return splitToken(_text, nSentences, L"~`!@#$%^&*()-_=+[]{}:;\"\'\\|<,>.?/");
 }
 
 double getDocNorm(const wchar_t* inputPath, int nFiles)

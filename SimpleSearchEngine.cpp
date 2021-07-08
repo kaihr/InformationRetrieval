@@ -150,6 +150,8 @@ bool wchComp(void* a, void* b) {
 
 void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords)
 {
+	time_t startTime = clock();
+
 	Pair *score = new Pair[nFiles];
 
 	for (int i = 0; i < nFiles; i++) {
@@ -163,7 +165,8 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 	wcscpy(modifiedKeyWords, originalKeywords);
 
 	toLatinLetter(modifiedKeyWords);
-	wchar_t** token = splitToken(modifiedKeyWords, nTok, L" .,:;'\"!()\n");
+
+	wchar_t** token = splitToken(modifiedKeyWords, nTok, L"~`!@#$%^&*()-_=+[]{}:;\"\'\\|<,>.?/ ");
 	modifiedKeyWords[wcslen(modifiedKeyWords) - 1] = '\0';
 
 	wchar_t currentWord[512];
@@ -218,6 +221,7 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	mergeSort((void*)score, 120, sizeof(Pair), pairCmp);
 
+	double totalTime = (clock() - startTime) * 1.00 / CLOCKS_PER_SEC;
 
 	for (int i = 0; i < 60 && i < nFiles; ) {
 		system("cls");
@@ -238,6 +242,7 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 			j++;
 		}
 
+		wprintf(L"Elapsed time: %.5lf seconds\n", totalTime);
 		wprintf(L"=======================================================\n");
 
 		if (num == 0) {
