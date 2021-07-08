@@ -166,7 +166,7 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 
 	toLatinLetter(modifiedKeyWords);
 
-	wchar_t** token = splitToken(modifiedKeyWords, nTok, L"~`!@#$%^&*()-_=+[]{}:;\"\'\\|<,>.?/ ");
+	wchar_t** token = splitToken(modifiedKeyWords, nTok, L"~`!@#$%^&*()-_=+[]{}:;\"\'\\|<,>.?/\n ");
 	modifiedKeyWords[wcslen(modifiedKeyWords) - 1] = '\0';
 
 	wchar_t currentWord[512];

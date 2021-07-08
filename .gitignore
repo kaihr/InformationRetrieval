@@ -389,6 +389,10 @@ FodyWeavers.xsd
 
 new train/
 new test/
+config.txt
+doc_freq.txt
+inverted_index.txt
+path.txt
 compressed/
 SearchEngine/
 /dbghelp.dll

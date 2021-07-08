@@ -18,7 +18,7 @@ bool isMatched(const wchar_t* haystack, const wchar_t* needle)
 
 		if (foundAtCurPos) {
 			int finishPos = startPos + m - 1;
-			if (finishPos == n - 1 || haystack[finishPos + 1] == ' ');
+			if ((finishPos == n - 1) || (haystack[finishPos + 1] == L' '))
 				return true;
 		}
 	}
