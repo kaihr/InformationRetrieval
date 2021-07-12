@@ -200,21 +200,21 @@ void erasePos(LinkedList* ls, int pos)
 	delete[] foo;
 }
 
-void eraseValue(LinkedList* ls, int value)
+bool eraseValue(LinkedList* ls, int value)
 {
 	Node* foo = findValue(ls, value);
 	
 	if (!foo)
-		return;
+		return false;
 
 	if (foo == ls->pHead) {
 		eraseFront(ls);
-		return;
+		return true;
 	}
 
 	if (foo == ls->pTail) {
 		eraseBack(ls);
-		return;
+		return true;
 	}
 
 	Node* pre = foo->pre;
@@ -222,6 +222,8 @@ void eraseValue(LinkedList* ls, int value)
 
 	linkNode(pre, after);
 	delete[] foo;
+
+	return true;
 }
 
 void eraseAll(LinkedList* ls)
@@ -238,13 +240,15 @@ void eraseLinkedList(LinkedList* ls)
 
 void printFoward(LinkedList* ls)
 {
-	std::cout << "[";
+	fwprintf(stderr, L"[");
+
 	for (Node* iter = ls->pHead; iter; iter = iter->nxt) {
-		std::cout << iter->value;
+		fwprintf(stderr, L"%d", iter->value);
 		if (iter->nxt)
-			std::cout << ' ';
+			fwprintf(stderr, L" ");
 	}
-	std::cout << "]" << std::endl;
+
+	fwprintf(stderr, L"]\n");
 }
 
 void printBackward(LinkedList* ls)
