@@ -85,8 +85,8 @@ void hashTableRemove(const wchar_t* ch, int docId)
 {
 	int termID = wchHash(ch);
 	loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
-	eraseValue(invIndex[termID], docId);
-	setDocFreq(termID, getDocFreq(termID) - 1);
+	if(eraseValue(invIndex[termID], docId))
+		setDocFreq(termID, getDocFreq(termID) - 1);
 }
 
 bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWords, int &nFilesRead)
@@ -134,6 +134,43 @@ bool listDirectoryContent(const wchar_t* sDir, wchar_t **stopWords, int nStopWor
 		}
 	} while (FindNextFile(hFind, &fdFile));
 	
+	FindClose(hFind);
+	return true;
+}
+
+bool listDirectoryContent(const wchar_t* path, int& nFiles, const wchar_t* pathPath, wchar_t**& pathList, wchar_t **stopWords, int nStopWords, BrowseFunc f)
+{
+	WIN32_FIND_DATA fdFile;
+	HANDLE hFind = nullptr;
+
+	wchar_t sPath[2048] = L"";
+
+	wcscat(sPath, path);
+	wcscat(sPath, L"\\*.*");
+
+	hFind = FindFirstFile(sPath, &fdFile);
+
+	if (hFind == INVALID_HANDLE_VALUE)
+		return false;
+
+	do
+	{
+		if (wcscmp(fdFile.cFileName, L".") == 0 || wcscmp(fdFile.cFileName, L"..") == 0)
+			continue;
+
+		wcscpy(sPath, path);
+		wcscat(sPath, L"\\");
+		wcscat(sPath, fdFile.cFileName);
+
+		if (fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			wprintf(L"Directory: %ls\n", sPath);
+			listDirectoryContent(path, nFiles, pathPath, pathList, stopWords, nStopWords, f);
+		}
+		else {
+			f(nFiles, sPath, pathPath, pathList, stopWords, nStopWords);
+		}
+	} while (FindNextFile(hFind, &fdFile));
+
 	FindClose(hFind);
 	return true;
 }
@@ -219,7 +256,12 @@ void find100Best(wchar_t **pathList, int nFiles, const wchar_t* originalKeywords
 	for (int i = 0; i < 120 && i < nFiles; i++)
 		score[i].a = score[i].a / sqrt(getDocNorm(pathList[2 * score[i].b + 1], nFiles));
 
-	mergeSort((void*)score, 120, sizeof(Pair), pairCmp);
+	int toSort = 120;
+
+	if (nFiles < toSort)
+		toSort = nFiles;
+
+	mergeSort((void*)score, toSort, sizeof(Pair), pairCmp);
 
 	double totalTime = (clock() - startTime) * 1.00 / CLOCKS_PER_SEC;
 
@@ -306,26 +348,13 @@ bool addFile(int& nFiles, const wchar_t* filePath, const wchar_t* pathPath, wcha
 
 	if (!editFile(nFiles, pathPath, filePath, metaDataPath, stopWords, nStopWords, hashTableInsert))
 		return false;
-
-	for (int i = 0; i < nFiles; i++)
-		delete[] pathList[i];
-	delete[] pathList;
-
+	
 	nFiles++;
-
-	wchar_t pathDelim[] = L"\xfeff\n";
-	int nFilesRead = 0;
-	wchar_t* paths = readFile(L"path.txt");
-	pathList = splitToken(paths, nFilesRead, pathDelim);
-
-	delete[] paths;
-
-	assert(nFilesRead / 2 == nFiles);
 
 	return true;
 }
 
-bool remFile(int nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar_t** pathList, wchar_t** stopWords, int nStopWord)
+bool remFile(int &nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar_t**& pathList, wchar_t** stopWords, int nStopWord)
 {
 	int docId = -1;
 	for (int i = 0; (i < nFiles) && (docId == -1); i++) {
@@ -345,17 +374,46 @@ bool remFile(int nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar
 	if (docId == -1)
 		return false;
 
-	editFile(docId, pathPath, pathList[2 * docId + 1], L"eHtIcSjTqOnRmYtgs", stopWords, nStopWord, hashTableRemove);
+	//"compressed\\eHtIcSjTqOnRmYtgs" -> a random file to dump output to
+	editFile(docId, pathPath, pathList[2 * docId + 1], L"compressed\\eHtIcSjTqOnRmYtgs", stopWords, nStopWord, hashTableRemove);
 
 	wcscpy(pathList[2 * docId], L"etcjqnmtgs");
 	wcscpy(pathList[2 * docId + 1], L"etcjqnmtgs");
 
-	FILE* fout = _wfopen(pathPath, L"w,ccs=UTF-8");
-	for (int i = 0; i < nFiles; i++)
-		fwprintf(fout, L"%ls\n%ls\n", pathList[2 * i], pathList[2 * i + 1]);
-	fclose(fout);
-
 	return true;
+}
+
+bool isDirectory(const wchar_t *path)
+{
+	DWORD fType = GetFileAttributesW(path);
+
+	if (fType == INVALID_FILE_ATTRIBUTES)
+		return false;
+
+	if (fType & FILE_ATTRIBUTE_DIRECTORY)
+		return true;
+
+	return false;
+}
+
+bool addFiles(int& nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar_t**& pathList, wchar_t** stopWords, int nStopWords)
+{
+	if (isDirectory(filePath)) {
+		listDirectoryContent(filePath, nFiles, pathPath, pathList, stopWords, nStopWords, addFile);
+		return true;
+	}
+
+	return addFile(nFiles, filePath, pathPath, pathList, stopWords, nStopWords);
+}
+
+bool remFiles(int& nFiles, const wchar_t* filePath, const wchar_t* pathPath, wchar_t**& pathList, wchar_t** stopWords, int nStopWords)
+{
+	if (isDirectory(filePath)) {
+		listDirectoryContent(filePath, nFiles, pathPath, pathList, stopWords, nStopWords, remFile);
+		return true;
+	}
+
+	return remFile(nFiles, filePath, pathPath, pathList, stopWords, nStopWords);
 }
 
 void extractResults(FILE* fout, const wchar_t* filePath, const wchar_t* metaDataPath, wchar_t** keyword, int nWords)

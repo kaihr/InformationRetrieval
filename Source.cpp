@@ -36,19 +36,16 @@ int main() {
 	loadDocFreq(L"doc_freq.txt");
 	calcPos(L"inverted_index.txt");
 
-	wchar_t pathDelim[] = L"\xfeff\n";
-	int nFilesRead = 0;
-	wchar_t* paths = readFile(L"path.txt");
-
-	if (!paths) {
+	wchar_t** pathList = nullptr;
+	
+	int nFiles = 0;
+	
+	if (!loadPathList(L"path.txt", pathList, nFiles)) {
 		wprintf(L"Can not load directory list\n");
 		wprintf(L"Press any button to continue\n");
 		getchar();
 		return 0;
 	}
-
-	wchar_t** pathList = splitToken(paths, nFilesRead, pathDelim);
-	int nFiles = nFilesRead / 2;
 
 	int nStopWords = 0;
 	wchar_t* text = readFile(L"resources\\vietnamese_stopwords.txt");
@@ -65,7 +62,6 @@ int main() {
 
 	wchar_t userInput[256] = L"";
 
-	delete[] paths;
 	delete[] text;
 
 	while (true) {
@@ -95,7 +91,7 @@ int main() {
 		if (choice == 2 || choice == 3) {
 			fgetws(userInput, 256, stdin);
 
-			if (choice == 3)
+			if (choice == 2)
 				wprintf(L"Enter file's ABSOLUTE path to add/update (no leading or trailing spaces): ");
 			else
 				wprintf(L"Enter file's ABSOLUTE path to remove (no leading or trailing spaces): ");
@@ -107,8 +103,11 @@ int main() {
 
 			if (choice == 2) {
 				wprintf(L"Adding %ls to search engine...\n", userInput);
-				remFile(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords);
-				if (!addFile(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords))
+				
+				remFiles(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords);
+				savePathList(L"path.txt", pathList, nFiles);
+
+				if (!addFiles(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords) || !loadPathList(L"path.txt", pathList, nFiles))
 					wprintf(L"Can not add %ls to search engine\n", userInput);
 				else
 					wprintf(L"Done. Elapsed time: %.5lf seconds\n", (clock() - startTime) * 1.00 / CLOCKS_PER_SEC);
@@ -116,7 +115,7 @@ int main() {
 
 			if (choice == 3) {
 				wprintf(L"Removing %ls from search engine...\n", userInput);
-				if (!remFile(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords))
+				if (!remFiles(nFiles, userInput, L"path.txt", pathList, stopWords, nStopWords) || !savePathList(L"path.txt", pathList, nFiles))
 					wprintf(L"Remove failed, %ls did not exist in the search engine\n", userInput);
 				else
 					wprintf(L"Done. Elapsed time: %.5lf seconds\n", (clock() - startTime) * 1.00 / CLOCKS_PER_SEC);
