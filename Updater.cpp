@@ -54,14 +54,16 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 				int nextJ = -1;
 				//nextJ != -1 --> nextJ is the largest number such that [j, nextJ) is a stop word
 
-				wcscpy(currentWord, L"");
-				for (int k = j; k < nWords && k < j + N_GRAM; k++) {
-					if (j != k)
-						wcscat(currentWord, L" ");
-					wcscat(currentWord, words[k]);
+				if (updateFunc == hashTableInsert) {
+					wcscpy(currentWord, L"");
+					for (int k = j; k < nWords && k < j + N_GRAM; k++) {
+						if (j != k)
+							wcscat(currentWord, L" ");
+						wcscat(currentWord, words[k]);
 
-					if (isStopWord(currentWord, stopWordsDic, nStopWords))
-						nextJ = k;
+						if (isStopWord(currentWord, stopWordsDic, nStopWords))
+							nextJ = k;
+					}
 				}
 
 				if (nextJ == -1) {
@@ -75,7 +77,7 @@ bool editFile(int docID, const wchar_t *pathPath, const wchar_t* inputPath, cons
 						toLatinLetter(tmp);
 						wcscat(currentWord, tmp);
 
-						//wprintf(L"%ls\n", currentWord);
+						//fwprintf(stderr, L"%ls\n", currentWord);
 						updateFunc(currentWord, docID);
 						wordsAdded++;
 					}

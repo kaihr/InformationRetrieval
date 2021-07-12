@@ -84,6 +84,7 @@ void hashTableInsert(const wchar_t* ch, int docId)
 void hashTableRemove(const wchar_t* ch, int docId)
 {
 	int termID = wchHash(ch);
+
 	loadListFromLine(invIndex[termID], L"inverted_index.txt", termID);
 	eraseValue(invIndex[termID], docId);
 	setDocFreq(termID, getDocFreq(termID) - 1);
