@@ -29,7 +29,7 @@ void insertKeepOrder(LinkedList* ls, int value);
 void eraseFront(LinkedList* ls);
 void eraseBack(LinkedList* ls);
 void erasePos(LinkedList* ls, int pos);
-void eraseValue(LinkedList* ls, int value);
+bool eraseValue(LinkedList* ls, int value);
 void eraseAll(LinkedList* ls);
 
 void eraseLinkedList(LinkedList* ls);
