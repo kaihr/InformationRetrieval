@@ -27,5 +27,5 @@ d----            7/7/2021  7:51 PM                resources
 -a---            7/8/2021  4:30 PM         978866 path.txt
 ```
 
-Run `A.exe` and it should be pretty straight-foward.
+Run `A.exe` and it should be pretty straight-forward.
 
