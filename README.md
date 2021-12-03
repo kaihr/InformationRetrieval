@@ -1,18 +1,16 @@
 # ITP2 - Final Assignment
 ## Search Engine
 
-The goal of this assignment is to implement a information retrieval system on a give data set. The information retrieval system must include the following features:
+The goal of this assignment is to implement a information retrieval system on a given data set. The information retrieval system must include the following features:
 
-- Find text files related to user's input.
+- Find text files related to the user's input.
 - Add/Remove file(s) from the system.
 
 ## Installation
 
-A simple command line search engine.
-
 Compiled using Visual Studio 2019 (With `_CRT_SECURE_NO_WARNINGS`).
 
-In order for this program to work, download the following [files](https://drive.google.com/drive/folders/1H4xYcq9sj5W5CvC5mNA0cWkCqK73kSBB?usp=sharing) and place them in the binary's folder.
+In order for this program to work, download the following [files](https://drive.google.com/drive/folders/1H4xYcq9sj5W5CvC5mNA0cWkCqK73kSBB?usp=sharing) and place them in the executable's folder.
 
 The folder containing the binary should be something like this:
 
