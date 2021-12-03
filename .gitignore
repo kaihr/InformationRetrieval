@@ -389,12 +389,17 @@ FodyWeavers.xsd
 
 new train/
 new test/
+
 config.txt
 doc_freq.txt
 inverted_index.txt
 path.txt
 compressed/
 SearchEngine/
+
+*.vcxproj.*
+*.sln
+
 /dbghelp.dll
 /Microsoft.DTfW.DHL.manifest
 /vld_x86.dll
